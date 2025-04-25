@@ -4,7 +4,7 @@ const ShiftTab = ({ activeShift, setActiveShift }) => {
   return (
     <div className="flex bg-gray-800 rounded-lg w-full max-w-xs mx-auto mb-5 relative overflow-hidden">
       <motion.div 
-        className="absolute h-full bg-indigo-600 rounded-lg"
+        className="absolute h-full bg-[#457b9d] rounded-lg"
         initial={{ width: '50%', x: activeShift === 'Morning' ? 0 : '100%' }}
         animate={{ 
           x: activeShift === 'Morning' ? 0 : '100%',

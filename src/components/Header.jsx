@@ -22,7 +22,7 @@ const Header = ({ lastUpdated, selectedDate, onDateChange }) => {
     <div className="bg-gray-900 text-white p-4 shadow">
       <div className="w-full px-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-indigo-400">
+        <h1 className="text-2xl font-bold bg-gradient-to-tl from-[#8ecae6] via-[#219ebc] to-[#023047] bg-clip-text text-transparent">
             Sub-assembly Dashboard
           </h1>
           <p className="text-gray-400 text-sm mt-1">
@@ -39,7 +39,7 @@ const Header = ({ lastUpdated, selectedDate, onDateChange }) => {
           <button 
             onClick={handleRefresh}
             disabled={refreshing}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center"
+            className="bg-[#457b9d] hover:bg-[#669bbc] text-white px-4 py-2 rounded flex items-center"
           >
             <ArrowPathIcon className={`h-5 w-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh

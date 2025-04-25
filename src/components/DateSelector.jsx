@@ -50,7 +50,7 @@ const DateSelector = ({ selectedDate, onDateChange }) => {
           <button
             onClick={() => handleSelectDate(today)}
             className={`w-full text-left px-4 py-2 hover:bg-gray-700 ${
-              selectedDate === today ? 'bg-indigo-600' : ''
+              selectedDate === today ? 'bg-[#415a77]' : ''
             }`}
           >
             Today
@@ -69,7 +69,7 @@ const DateSelector = ({ selectedDate, onDateChange }) => {
                     key={formattedDate}
                     onClick={() => handleSelectDate(formattedDate)}
                     className={`w-full text-left px-4 py-2 hover:bg-gray-700 ${
-                      selectedDate === formattedDate ? 'bg-indigo-600' : ''
+                      selectedDate === formattedDate ? 'bg-[#457b9d]' : ''
                     }`}
                   >
                     {format(new Date(date), 'MMM dd, yyyy')}
