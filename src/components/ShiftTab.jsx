@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 
 const ShiftTab = ({ activeShift, setActiveShift }) => {
   return (
-    <div className="flex bg-gray-800/30 rounded-xl w-full max-w-md mx-auto mb-6 relative overflow-hidden border border-gray-700/30 shadow-lg p-1">
+    <div className="flex bg-gray-800/30 rounded-xl w-full max-w-xs mx-auto mb-6 relative overflow-hidden border border-gray-700/30 shadow-lg p-1">
       <motion.div 
         className="absolute h-full bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-lg"
         initial={{ width: '50%', x: activeShift === 'Morning' ? 0 : '100%' }}

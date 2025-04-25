@@ -20,9 +20,9 @@ const Header = ({ lastUpdated, selectedDate, onDateChange }) => {
 
   return (
     <div className="bg-gray-900/80 backdrop-blur-sm text-gray-100 p-5 shadow-lg border-b border-gray-800/50">
-      <div className="container mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="w-full px-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-800">
+          <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
             Sub-assembly Dashboard
           </h1>
           <p className="text-gray-400 text-sm mt-1">
@@ -39,7 +39,7 @@ const Header = ({ lastUpdated, selectedDate, onDateChange }) => {
           <button 
             onClick={handleRefresh}
             disabled={refreshing}
-            className="bg-indigo-600/80 hover:bg-blue-900 text-white px-4 py-2 rounded-lg flex items-center transition-all shadow-md border border-indigo-500/30"
+            className="bg-indigo-600/80 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center transition-all shadow-md border border-indigo-500/30"
           >
             <ArrowPathIcon className={`h-5 w-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
