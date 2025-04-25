@@ -8,11 +8,11 @@ const TimeSlotRow = ({ slotNumber, workcenters, data, shift }) => {
   console.log(`Time Slot ${slotNumber} Data:`, data);
   
   return (
-    <div className="grid grid-cols-[80px_repeat(auto-fill,minmax(120px,1fr))] gap-2 h-16">
+    <div className="grid grid-cols-[100px_repeat(9,1fr)] gap-1 h-16">
       {/* Time slot label */}
-      <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg shadow-lg flex flex-col items-center justify-center border border-indigo-500/30">
+      <div className="bg-[#415a77] text-white rounded flex flex-col items-center justify-center">
         <div className="text-xl font-bold">{slotNumber}</div>
-        <div className="text-xs opacity-80">{timeSlotLabel}</div>
+        <div className="text-xs">{timeSlotLabel}</div>
       </div>
       
       {/* Production cells for each workcenter */}

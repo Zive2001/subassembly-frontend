@@ -1,20 +1,22 @@
-import { motion } from 'framer-motion';
-import { getProductionColor } from '../utils/formatters';
-
 const ProductionCell = ({ value }) => {
-  const displayValue = value === 0 ? '-' : value;
-  const cellColor = getProductionColor(value);
+    // Define color scale based on production value
+    // Assuming higher values are better
+    const getColorClass = (val) => {
+        if (val === 0) return 'bg-[#1f1f1f] text-[#9e9e9e] border-[#2d2d2d]'; 
+        if (val < 20) return 'bg-[#ae2012] text-[#edede9]'; 
+        if (val < 80) return 'bg-[#fca311] text-[#edede9]'; 
+        return 'bg-[#2a9d8f] text-[#edede9]'; 
+      };
+      
   
-  return (
-    <motion.div 
-      className={`${cellColor} rounded-lg shadow-md flex items-center justify-center text-2xl font-bold h-full text-gray-800`}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {displayValue}
-    </motion.div>
-  );
-};
-
-export default ProductionCell;
+    return (
+      <div 
+        className={`h-full w-full rounded flex items-center justify-center font-mono text-xl font-bold ${getColorClass(value)}`}
+      >
+        {value || 0}
+      </div>
+    );
+  };
+  
+  export default ProductionCell;
+  

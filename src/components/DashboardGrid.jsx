@@ -9,8 +9,8 @@ const DashboardGrid = ({ productionData, activeShift }) => {
   console.log('Shift Data:', shiftData);
   
   return (
-    <div className="w-full h-full overflow-x-auto overflow-y-auto pb-4 no-scrollbar">
-      <div className="w-full p-2 space-y-2">
+    <div className="w-full h-full overflow-visible">
+      <div className="w-full p-2 space-y-1">
         {/* Display workcenters as column headers */}
         <WorkcenterHeader workcenters={workcenters} />
         

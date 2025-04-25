@@ -35,28 +35,28 @@ const DateSelector = ({ selectedDate, onDateChange }) => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="bg-gray-800/60 hover:bg-gray-700/80 text-gray-200 px-4 py-2 rounded-lg flex items-center transition-all shadow-md border border-gray-700/50"
+        className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center"
       >
-        <CalendarIcon className="h-5 w-5 mr-2 text-indigo-400" />
+        <CalendarIcon className="h-5 w-5 mr-2" />
         {selectedDate === today ? 'Today' : format(parseISO(selectedDate), 'MMM dd, yyyy')}
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 right-0 mt-2 w-64 bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-xl py-1 border border-gray-700/70">
-          <div className="px-4 py-2 border-b border-gray-700/50">
-            <h3 className="text-sm font-semibold text-gray-200">Select Date</h3>
+        <div className="absolute z-10 right-0 mt-2 w-64 bg-gray-800 rounded shadow py-1 border border-gray-700">
+          <div className="px-4 py-2 border-b border-gray-700">
+            <h3 className="text-sm font-semibold text-white">Select Date</h3>
           </div>
           
           <button
             onClick={() => handleSelectDate(today)}
-            className={`w-full text-left px-4 py-2 hover:bg-gray-700/70 transition-colors ${
-              selectedDate === today ? 'bg-indigo-600/50 text-white' : 'text-gray-300'
+            className={`w-full text-left px-4 py-2 hover:bg-gray-700 ${
+              selectedDate === today ? 'bg-indigo-600' : ''
             }`}
           >
             Today
           </button>
           
-          <div className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+          <div className="max-h-60 overflow-y-auto">
             {loading ? (
               <div className="px-4 py-2 text-gray-400 text-sm">Loading dates...</div>
             ) : availableDates.length === 0 ? (
@@ -68,8 +68,8 @@ const DateSelector = ({ selectedDate, onDateChange }) => {
                   <button
                     key={formattedDate}
                     onClick={() => handleSelectDate(formattedDate)}
-                    className={`w-full text-left px-4 py-2 hover:bg-gray-700/70 transition-colors ${
-                      selectedDate === formattedDate ? 'bg-indigo-600/50 text-white' : 'text-gray-300'
+                    className={`w-full text-left px-4 py-2 hover:bg-gray-700 ${
+                      selectedDate === formattedDate ? 'bg-indigo-600' : ''
                     }`}
                   >
                     {format(new Date(date), 'MMM dd, yyyy')}

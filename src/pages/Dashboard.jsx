@@ -66,7 +66,7 @@ const Dashboard = () => {
       />
       
       <motion.div 
-        className="w-full py-8 px-4"
+        className="flex flex-col items-center justify-center px-4 py-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -82,7 +82,7 @@ const Dashboard = () => {
         
         <ShiftTab activeShift={activeShift} setActiveShift={setActiveShift} />
         
-        <div className="bg-gray-900/50 backdrop-blur-sm rounded-lg shadow-2xl border border-gray-800/50 p-5 h-[calc(100vh-240px)]">
+        <div className="bg-gray-900 rounded-lg shadow-2xl border border-gray-800 p-4 w-full max-w-full overflow-auto">
           <DashboardGrid 
             productionData={productionData} 
             activeShift={activeShift} 
