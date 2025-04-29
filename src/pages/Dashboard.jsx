@@ -1,20 +1,68 @@
+// src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { useProductionData } from '../hooks/useProductionData';
 import Header from '../components/Header';
 import ShiftTab from '../components/ShiftTab';
+import SectionSelector from '../components/SectionSelector';
 import DashboardGrid from '../components/DashboardGrid';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { getWorkcentersBySection } from '../utils/sectionConfig';
 
 const Dashboard = () => {
   const [activeShift, setActiveShift] = useState('Morning');
+  const [activeSection, setActiveSection] = useState('All'); // Default to showing all sections
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd')); // Default to today
   const { productionData, loading, error, lastUpdated } = useProductionData(selectedDate);
+  const [filteredProductionData, setFilteredProductionData] = useState({
+    workcenters: [],
+    data: {
+      Morning: [],
+      Evening: []
+    }
+  });
 
   // Reset to Morning shift when changing dates
   useEffect(() => {
     setActiveShift('Morning');
   }, [selectedDate]);
+
+  // Filter production data when section changes
+  useEffect(() => {
+    if (productionData && productionData.workcenters) {
+      // Filter workcenters based on the selected section
+      const filteredWorkcenters = getWorkcentersBySection(activeSection, productionData.workcenters);
+      
+      // Create a new data object with only the filtered workcenters
+      const filteredData = {
+        workcenters: filteredWorkcenters,
+        data: {
+          Morning: productionData.data.Morning.map(hourData => {
+            // Create a new object with just the workcenters we want
+            const filteredHourData = {};
+            filteredWorkcenters.forEach(wc => {
+              if (hourData[wc] !== undefined) {
+                filteredHourData[wc] = hourData[wc];
+              }
+            });
+            return filteredHourData;
+          }),
+          Evening: productionData.data.Evening.map(hourData => {
+            // Create a new object with just the workcenters we want
+            const filteredHourData = {};
+            filteredWorkcenters.forEach(wc => {
+              if (hourData[wc] !== undefined) {
+                filteredHourData[wc] = hourData[wc];
+              }
+            });
+            return filteredHourData;
+          })
+        }
+      };
+      
+      setFilteredProductionData(filteredData);
+    }
+  }, [productionData, activeSection]);
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
@@ -82,9 +130,17 @@ const Dashboard = () => {
         
         <ShiftTab activeShift={activeShift} setActiveShift={setActiveShift} />
         
+        {/* Add Section Selector */}
+        <div className="mt-4 mb-6">
+          <SectionSelector 
+            activeSection={activeSection} 
+            setActiveSection={setActiveSection} 
+          />
+        </div>
+        
         <div className="bg-gray-900 rounded-lg shadow-2xl border border-gray-800 p-4 w-full max-w-full overflow-auto">
           <DashboardGrid 
-            productionData={productionData} 
+            productionData={filteredProductionData} 
             activeShift={activeShift} 
           />
         </div>

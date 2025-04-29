@@ -1,12 +1,20 @@
+// src/components/DashboardGrid.jsx
 import WorkcenterHeader from './WorkcenterHeader';
 import TimeSlotRow from './TimeSlotRow';
+import { getSectionForWorkcenter } from '../utils/sectionConfig';
 
 const DashboardGrid = ({ productionData, activeShift }) => {
   const { workcenters = [], data = {} } = productionData;
   const shiftData = data[activeShift] || [];
   
-  console.log('Workcenters:', workcenters);
-  console.log('Shift Data:', shiftData);
+  // No workcenters to display
+  if (workcenters.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center p-10">
+        <p className="text-gray-400 text-lg">No workcenters to display for the selected section.</p>
+      </div>
+    );
+  }
   
   return (
     <div className="w-full h-full overflow-visible">
