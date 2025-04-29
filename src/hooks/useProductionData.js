@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { getProductionData, getProductionDataByDate } from '../services/api';
 import { format } from 'date-fns';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://sg-prod-bdyapp-subdashback.azurewebsites.net';
 
 export const useProductionData = (selectedDate) => {
   const [productionData, setProductionData] = useState({
