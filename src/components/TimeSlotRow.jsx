@@ -12,7 +12,7 @@ const TimeSlotRow = ({ slotNumber, workcenters, data, shift }) => {
       {/* Time slot label */}
       <div className="bg-[#415a77] text-white rounded flex flex-col items-center justify-center">
         <div className="text-xl font-bold">{slotNumber}</div>
-        <div className="text-xs">{timeSlotLabel}</div>
+       {/* <div className="text-xs">{timeSlotLabel}</div> */}
       </div>
       
       {/* Production cells for each workcenter */}
