@@ -1,27 +1,36 @@
+// src/components/TimeSlotRow.jsx
 import ProductionCell from './ProductionCell';
 import { timeSlotToLabel } from '../utils/formatters';
+import { motion } from 'framer-motion';
 
-const TimeSlotRow = ({ slotNumber, workcenters, data, shift }) => {
+const TimeSlotRow = ({ slotNumber, workcenters, data, shift, setHoverData }) => {
   const timeSlotLabel = timeSlotToLabel(slotNumber)[shift.toLowerCase()];
   
-  // Debug log to see what data we're receiving
-  console.log(`Time Slot ${slotNumber} Data:`, data);
-  
   return (
-    <div className="grid grid-cols-[100px_repeat(9,1fr)] gap-1 h-16">
+    <motion.div 
+      className="grid grid-cols-[120px_repeat(auto-fill,minmax(100px,1fr))] gap-1.5"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: slotNumber * 0.03 }}
+    >
       {/* Time slot label */}
-      <div className="bg-[#415a77] text-white rounded flex flex-col items-center justify-center">
-        <div className="text-xl font-bold">{slotNumber}</div>
-       <div className="text-xs">{timeSlotLabel}</div>
+      <div className="bg-slate-800/80 text-white rounded-lg border border-slate-700/50 flex flex-col items-center justify-center py-1.5">
+        <div className="text-lg font-bold text-white">{slotNumber}</div>
+        <div className="text-xs text-slate-400">{timeSlotLabel}</div>
       </div>
       
       {/* Production cells for each workcenter */}
       {workcenters.map((workcenter) => (
         <div key={workcenter} className="h-full">
-          <ProductionCell value={data[workcenter] || 0} />
+          <ProductionCell 
+            value={data[workcenter] || 0} 
+            workcenter={workcenter}
+            timeSlot={slotNumber}
+            setHoverData={setHoverData}
+          />
         </div>
       ))}
-    </div>
+    </motion.div>
   );
 };
 

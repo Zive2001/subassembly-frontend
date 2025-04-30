@@ -1,13 +1,14 @@
 // src/utils/sectionConfig.js
 
-// Define the mapping between workcenters and sections
+
 // This is easily configurable - just add or modify entries as needed
 const sectionConfig = {
     // Each section contains an array of workcenters
-    'CUP': ['S2CU1', 'S2CU2', 'S2CU3'],
+    'CUP': ['S2CU1', 'S2CU2', 'S2CU3', 'S2CU4'],
     'CENTER PART': ['S2CP1', 'S2CP2'],
-    'MOTIF': ['S2MU', 'S2MU2'],
-    // Add more sections as needed
+    'MOTIF': ['S2MU', 'S2MU1'],
+    'LABEL': ['S2LU', 'S2LU1'],
+    
   };
   
   // Create a reverse lookup from workcenter to section
