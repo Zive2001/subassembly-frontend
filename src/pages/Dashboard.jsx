@@ -21,7 +21,22 @@ const Dashboard = () => {
       Evening: []
     }
   });
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
+  const [mobileView, setMobileView] = useState(window.innerWidth < 768);
+
+  // Handle window resize to detect mobile view
+  useEffect(() => {
+    const handleResize = () => {
+      setMobileView(window.innerWidth < 768);
+      // Auto-close sidebar on mobile when resizing to mobile view
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Reset to Morning shift when changing dates
   useEffect(() => {
@@ -65,11 +80,39 @@ const Dashboard = () => {
     }
   }, [productionData, activeSection]);
 
+  // Handle sidebar toggle and auto-close on selection in mobile view
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleSetActiveSection = (section) => {
+    setActiveSection(section);
+    // Close sidebar automatically after selection on mobile
+    if (mobileView) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const handleSetActiveShift = (shift) => {
+    setActiveShift(shift);
+    // Close sidebar automatically after selection on mobile
+    if (mobileView) {
+      setSidebarOpen(false);
+    }
+  };
+
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
 
   const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
+
+  // Handle backdrop click to close sidebar on mobile
+  const handleBackdropClick = () => {
+    if (mobileView) {
+      setSidebarOpen(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -78,8 +121,9 @@ const Dashboard = () => {
           lastUpdated={null} 
           selectedDate={selectedDate}
           onDateChange={handleDateChange}
-          setSidebarOpen={setSidebarOpen}
+          setSidebarOpen={handleSidebarToggle}
           sidebarOpen={sidebarOpen}
+          mobileView={mobileView}
         />
         <div className="flex-1 flex justify-center items-center">
           <div className="flex flex-col items-center gap-4">
@@ -98,8 +142,9 @@ const Dashboard = () => {
           lastUpdated={null} 
           selectedDate={selectedDate}
           onDateChange={handleDateChange}
-          setSidebarOpen={setSidebarOpen}
+          setSidebarOpen={handleSidebarToggle}
           sidebarOpen={sidebarOpen}
+          mobileView={mobileView}
         />
         <div className="flex-1 flex justify-center items-center p-6">
           <div className="bg-red-500/10 border border-red-500/20 rounded-lg shadow-lg p-6 max-w-2xl w-full">
@@ -132,29 +177,55 @@ const Dashboard = () => {
         lastUpdated={lastUpdated}
         selectedDate={selectedDate}
         onDateChange={handleDateChange}
-        setSidebarOpen={setSidebarOpen}
+        setSidebarOpen={handleSidebarToggle}
         sidebarOpen={sidebarOpen}
+        mobileView={mobileView}
       />
       
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+      <div className="flex flex-1 relative overflow-hidden">
+        {/* Backdrop for mobile when sidebar is open */}
+        {mobileView && sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-20"
+            onClick={handleBackdropClick}
+          ></div>
+        )}
+        
+        {/* Sidebar - full height on desktop, sliding drawer on mobile */}
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div 
-              className="bg-slate-900 w-64 border-r border-slate-800"
-              initial={{ x: -260 }}
+              className={`bg-slate-900 border-r border-slate-800 z-30 ${
+                mobileView ? 'fixed left-0 top-0 bottom-0 w-72' : 'w-64'
+              }`}
+              initial={{ x: mobileView ? -280 : -260 }}
               animate={{ x: 0 }}
-              exit={{ x: -260 }}
+              exit={{ x: mobileView ? -280 : -260 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
+              {/* Mobile close button */}
+              {mobileView && (
+                <div className="flex justify-between items-center px-4 py-3 border-b border-slate-800">
+                  <h2 className="text-lg font-medium text-slate-200">Dashboard Controls</h2>
+                  <button 
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
               <div className="p-4">
-                <h2 className="text-lg font-medium text-slate-300 mb-2">Controls</h2>
+                {!mobileView && <h2 className="text-lg font-medium text-slate-300 mb-4">Controls</h2>}
                 
                 <div className="space-y-6">
                   {/* Shift Selection */}
                   <div>
                     <h3 className="text-sm text-slate-400 mb-2">Shift</h3>
-                    <ShiftTab activeShift={activeShift} setActiveShift={setActiveShift} />
+                    <ShiftTab activeShift={activeShift} setActiveShift={handleSetActiveShift} />
                   </div>
                   
                   {/* Section Selection */}
@@ -162,9 +233,24 @@ const Dashboard = () => {
                     <h3 className="text-sm text-slate-400 mb-2">Section</h3>
                     <SectionSelector 
                       activeSection={activeSection} 
-                      setActiveSection={setActiveSection} 
+                      setActiveSection={handleSetActiveSection} 
                     />
                   </div>
+                  
+                  {/* Mobile controls */}
+                  {mobileView && (
+                    <div className="mt-6 pt-6 border-t border-slate-800">
+                      <button 
+                        onClick={() => setSidebarOpen(false)}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors flex items-center justify-center"
+                      >
+                        <span>Apply & Close</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -197,24 +283,47 @@ const Dashboard = () => {
                 </div>
               )}
               
+              {/* Mobile Quick Controls - Shown above content when sidebar is closed */}
+              {mobileView && (
+                <div className="mb-4 flex items-center justify-between bg-slate-900 rounded-lg p-3 border border-slate-800">
+                  <div className="flex items-center">
+                    <span className="text-sm text-slate-400 mr-2">Viewing:</span>
+                    <span className="text-sm font-medium text-white">
+                      {activeSection} • {activeShift} Shift
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-2 rounded-md bg-slate-800 text-slate-300"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              
               <div className="bg-slate-900 rounded-lg shadow-xl border border-slate-800 overflow-hidden">
-                <div className="p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm flex justify-between items-center sticky top-0 z-10">
-                  <h2 className="text-xl font-bold text-slate-200">
-                    {activeSection} Section - {activeShift} Shift
+                <div className="p-3 sm:p-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm flex justify-between items-center sticky top-0 z-10">
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-200">
+                    {mobileView ? 'Productivity Report' : `${activeSection} Section - ${activeShift} Shift`}
                   </h2>
                   
-                  <div className="flex items-center space-x-2 bg-slate-800/60 px-3 py-1.5 rounded-md text-sm text-slate-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>Productivity Report</span>
-                  </div>
+                  {!mobileView && (
+                    <div className="flex items-center space-x-2 bg-slate-800/60 px-3 py-1.5 rounded-md text-sm text-slate-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span>Productivity Report</span>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="p-4">
+                <div className="p-2 sm:p-4 overflow-x-auto">
                   <DashboardGrid 
                     productionData={filteredProductionData} 
-                    activeShift={activeShift} 
+                    activeShift={activeShift}
+                    mobileView={mobileView}
                   />
                 </div>
               </div>
@@ -224,19 +333,19 @@ const Dashboard = () => {
       </div>
 
       {/* Footer */}
-      <footer className="py-4 bg-slate-900 border-t border-slate-800 text-center">
-        <div className="container mx-auto px-6 flex items-center justify-between">
+      <footer className="py-3 sm:py-4 bg-slate-900 border-t border-slate-800 text-center">
+        <div className="container mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center">
             <img 
               src="/MAS White.png" 
               alt="FCA App Logo" 
-              className="h-8 w-auto"
+              className="h-6 sm:h-8 w-auto"
             />
-            <div className="ml-4 h-8 w-px bg-slate-700"></div>
-            <span className="ml-4 text-slate-400 text-sm">Sub-assembly Dashboard</span>
+            <div className="ml-3 sm:ml-4 h-6 sm:h-8 w-px bg-slate-700 hidden sm:block"></div>
+            <span className="ml-3 sm:ml-4 text-slate-400 text-xs sm:text-sm">Sub-assembly Dashboard</span>
           </div>
-          <p className="text-slate-400 text-sm">
-            © {new Date().getFullYear()} BPL3 Production. Bodyline Digital Excellence.
+          <p className="text-slate-400 text-xs sm:text-sm font-medium">
+            © {new Date().getFullYear()} Bodyline Digital Excellence. All rights reserved.
           </p>
         </div>
       </footer>

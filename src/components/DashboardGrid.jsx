@@ -4,10 +4,11 @@ import WorkcenterHeader from './WorkcenterHeader';
 import TimeSlotRow from './TimeSlotRow';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DashboardGrid = ({ productionData, activeShift }) => {
+const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
   const { workcenters = [], data = {} } = productionData;
   const shiftData = data[activeShift] || [];
   const [hoverData, setHoverData] = useState(null);
+  const [selectedCell, setSelectedCell] = useState(null); // For mobile tap interaction
   
   // Calculate total production for each workcenter
   const totals = workcenters.reduce((acc, workcenter) => {
@@ -17,16 +18,29 @@ const DashboardGrid = ({ productionData, activeShift }) => {
     acc[workcenter] = total;
     return acc;
   }, {});
-  
+
+  // Handle mobile tap on cell
+  const handleCellTap = (data) => {
+    if (mobileView) {
+      if (selectedCell && 
+          selectedCell.workcenter === data.workcenter && 
+          selectedCell.timeSlot === data.timeSlot) {
+        setSelectedCell(null); // Toggle off if tapping the same cell
+      } else {
+        setSelectedCell(data); // Set new selected cell
+      }
+    }
+  };
+
   // No workcenters to display
   if (workcenters.length === 0) {
     return (
-      <div className="w-full py-16 flex flex-col items-center justify-center gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="w-full py-10 sm:py-16 flex flex-col items-center justify-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 sm:h-12 sm:w-12 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
-        <p className="text-slate-400 text-base">No workcenters to display for the selected section.</p>
-        <button className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
+        <p className="text-slate-400 text-sm sm:text-base text-center px-4">No workcenters to display for the selected section.</p>
+        <button className="mt-1 sm:mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors">
           Select Another Section
         </button>
       </div>
@@ -36,79 +50,138 @@ const DashboardGrid = ({ productionData, activeShift }) => {
   return (
     <div className="w-full h-full">
       <div className="relative">
-        {/* Floating info card on hover */}
-        <AnimatePresence>
-          {hoverData && (
-            <motion.div 
-              className="absolute z-20 bg-slate-800 shadow-lg rounded-lg border border-slate-700 p-3 w-64"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ 
-                top: hoverData.position.y - 100, 
-                left: hoverData.position.x + 20 
-              }}
-            >
-              <div className="flex justify-between items-start">
-                <h3 className="font-bold text-white">{hoverData.workcenter}</h3>
-                <span className="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">
-                  Hour {hoverData.timeSlot}
-                </span>
-              </div>
-              <div className="mt-2 space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 text-sm">Production</span>
-                  <span className="font-mono font-bold text-lg">
-                    {hoverData.value || 0}
+        {/* Floating info card on hover - Only on tablet and desktop */}
+        {!mobileView && (
+          <AnimatePresence>
+            {hoverData && (
+              <motion.div 
+                className="absolute z-20 bg-slate-800 shadow-lg rounded-lg border border-slate-700 p-3 w-64"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ 
+                  top: hoverData.position.y - 100, 
+                  left: hoverData.position.x + 20 
+                }}
+              >
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-white">{hoverData.workcenter}</h3>
+                  <span className="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">
+                    Hour {hoverData.timeSlot}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 text-sm">Target</span>
-                  <span className="font-mono text-green-400">85</span>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Production</span>
+                    <span className="font-mono font-bold text-lg">
+                      {hoverData.value || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Target</span>
+                    <span className="font-mono text-green-400">85</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 text-sm">Variance</span>
+                    <span className={`font-mono font-medium ${(hoverData.value || 0) >= 85 ? 'text-green-400' : 'text-red-400'}`}>
+                      {((hoverData.value || 0) - 85).toFixed(0)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-400 text-sm">Variance</span>
-                  <span className={`font-mono font-medium ${(hoverData.value || 0) >= 85 ? 'text-green-400' : 'text-red-400'}`}>
-                    {((hoverData.value || 0) - 85).toFixed(0)}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
 
-        {/* Grid with sticky header */}
-        <div className="w-full space-y-2">
-          {/* Workcenters header with totals */}
-          <div className="sticky top-0 z-10 bg-slate-900 pb-2">
-            <WorkcenterHeader workcenters={workcenters} totals={totals} />
-          </div>
-          
-          {/* Time slots rows */}
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((slotNumber) => (
-              <TimeSlotRow 
-                key={slotNumber}
-                slotNumber={slotNumber}
-                workcenters={workcenters}
-                data={shiftData[slotNumber - 1] || {}}
-                shift={activeShift}
-                setHoverData={setHoverData}
+        {/* Mobile cell detail panel - shown when tapping a cell */}
+        {mobileView && (
+          <AnimatePresence>
+            {selectedCell && (
+              <motion.div 
+                className="mb-4 bg-slate-800 shadow-lg rounded-lg border border-slate-700 p-3"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-white">{selectedCell.workcenter}</h3>
+                    <span className="text-xs text-slate-400">Hour {selectedCell.timeSlot}</span>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedCell(null)}
+                    className="p-1 text-slate-400 hover:text-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div className="bg-slate-700/60 rounded p-2 text-center">
+                    <div className="text-xs text-slate-400">Production</div>
+                    <div className="font-mono font-bold text-lg">{selectedCell.value || 0}</div>
+                  </div>
+                  <div className="bg-slate-700/60 rounded p-2 text-center">
+                    <div className="text-xs text-slate-400">Target</div>
+                    <div className="font-mono text-green-400 text-lg">85</div>
+                  </div>
+                  <div className="bg-slate-700/60 rounded p-2 text-center">
+                    <div className="text-xs text-slate-400">Variance</div>
+                    <div className={`font-mono font-medium text-lg ${(selectedCell.value || 0) >= 85 ? 'text-green-400' : 'text-red-400'}`}>
+                      {((selectedCell.value || 0) - 85).toFixed(0)}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
+        {/* Responsive grid layout */}
+        <div className={`w-full space-y-2 ${mobileView ? 'overflow-x-auto pb-2' : ''}`}>
+          {/* Scrollable container for mobile */}
+          <div className={mobileView ? 'min-w-[600px]' : ''}>
+            {/* Workcenters header with totals */}
+            <div className="sticky top-0 z-10 bg-slate-900 pb-2">
+              <WorkcenterHeader 
+                workcenters={workcenters} 
+                totals={totals}
+                mobileView={mobileView} 
               />
-            ))}
+            </div>
+            
+            {/* Time slots rows */}
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((slotNumber) => (
+                <TimeSlotRow 
+                  key={slotNumber}
+                  slotNumber={slotNumber}
+                  workcenters={workcenters}
+                  data={shiftData[slotNumber - 1] || {}}
+                  shift={activeShift}
+                  setHoverData={setHoverData}
+                  onCellTap={handleCellTap}
+                  isSelected={selectedCell?.timeSlot === slotNumber}
+                  selectedWorkcenter={selectedCell?.workcenter}
+                  mobileView={mobileView}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Summary section */}
-      <div className="mt-8 bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-        <h3 className="text-sm font-medium text-slate-300 mb-3">Shift Production Summary</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      {/* Summary section - Responsive grid for mobile */}
+      <div className="mt-6 sm:mt-8 bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-700/50">
+        <h3 className="text-sm font-medium text-slate-300 mb-2 sm:mb-3">Shift Production Summary</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
           {workcenters.map(workcenter => (
-            <div key={workcenter} className="bg-slate-800 rounded-md p-3 border border-slate-700">
-              <div className="text-xs text-slate-400 mb-1">{workcenter}</div>
-              <div className="text-xl font-bold font-mono">{totals[workcenter] || 0}</div>
+            <div key={workcenter} className="bg-slate-800 rounded-md p-2 sm:p-3 border border-slate-700">
+              <div className="text-xs text-slate-400 mb-1 truncate">{workcenter}</div>
+              <div className="text-lg sm:text-xl font-bold font-mono">{totals[workcenter] || 0}</div>
               <div className="mt-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full ${

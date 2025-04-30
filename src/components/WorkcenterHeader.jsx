@@ -1,10 +1,10 @@
-// src/components/WorkcenterHeader.jsx
 import { motion } from 'framer-motion';
+import { getSectionForWorkcenter } from '../utils/sectionConfig';
 
-const WorkcenterHeader = ({ workcenters, totals = {} }) => {
+const WorkcenterHeader = ({ workcenters, totals = {}, mobileView }) => {
   return (
-    <div className="grid grid-cols-[120px_repeat(auto-fill,minmax(100px,1fr))] gap-1.5">
-      <div className="h-12 flex flex-col justify-center items-center bg-slate-800/80 rounded-lg border border-slate-700/80 backdrop-blur-sm">
+    <div className="grid grid-cols-[80px_repeat(auto-fill,minmax(80px,1fr))] sm:grid-cols-[120px_repeat(auto-fill,minmax(100px,1fr))] gap-1.5">
+      <div className="h-10 sm:h-12 flex flex-col justify-center items-center bg-slate-800/80 rounded-lg border border-slate-700/80 backdrop-blur-sm">
         <div className="text-xs text-slate-400">Time Slot</div>
         <div className="text-sm font-semibold text-white">Hour</div>
       </div>
@@ -12,12 +12,13 @@ const WorkcenterHeader = ({ workcenters, totals = {} }) => {
       {workcenters.map((workcenter) => (
         <motion.div 
           key={workcenter} 
-          className="h-12 flex flex-col justify-center items-center bg-slate-800/80 rounded-lg border border-slate-700/80 backdrop-blur-sm relative overflow-hidden"
+          className="h-10 sm:h-12 flex flex-col justify-center items-center bg-slate-800/80 rounded-lg border border-slate-700/80 backdrop-blur-sm relative overflow-hidden"
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.2 }}
         >
-          <div className="text-xs text-slate-400 mb-0.5">Workcenter</div>
-          <div className="text-sm font-bold text-white">{workcenter}</div>
+          {/* Emphasize the workcenter name by making it larger and more prominent */}
+          <div className="text-sm font-bold text-white mb-0.5 px-1 truncate w-full text-center">{workcenter}</div>
+          <div className="text-xs font-semibold text-slate-500">{getSectionForWorkcenter(workcenter)}</div>
           
           {/* Show total if available */}
           {totals && totals[workcenter] !== undefined && (

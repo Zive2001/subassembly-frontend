@@ -21,7 +21,7 @@ const SectionSelector = ({ activeSection, setActiveSection }) => {
             activeSection === section ? 'bg-blue-500' : 'bg-slate-600 group-hover:bg-slate-400'
           }`}></span>
           
-          {section}
+          <span className="truncate">{section}</span>
           
           {activeSection === section && (
             <motion.div 

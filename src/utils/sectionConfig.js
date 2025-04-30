@@ -35,7 +35,7 @@ const sectionConfig = {
   
   // Get section for a workcenter
   const getSectionForWorkcenter = (workcenter) => {
-    return workcenterToSection[workcenter] || 'Other';
+    return workcenterToSection[workcenter] || 'OTHER';
   };
   
   export {
