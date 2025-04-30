@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [activeShift, setActiveShift] = useState('Morning');
   const [activeSection, setActiveSection] = useState('All'); // Default to showing all sections
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd')); // Default to today
-  const { productionData, loading, error, lastUpdated } = useProductionData(selectedDate);
+  const { productionData, targetData, loading, error, lastUpdated } = useProductionData(selectedDate);
   const [filteredProductionData, setFilteredProductionData] = useState({
     workcenters: [],
     data: {
@@ -324,6 +324,7 @@ const Dashboard = () => {
                     productionData={filteredProductionData} 
                     activeShift={activeShift}
                     mobileView={mobileView}
+                    targetData={targetData}
                   />
                 </div>
               </div>

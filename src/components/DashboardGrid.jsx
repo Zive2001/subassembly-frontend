@@ -1,14 +1,15 @@
 // src/components/DashboardGrid.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WorkcenterHeader from './WorkcenterHeader';
 import TimeSlotRow from './TimeSlotRow';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
+const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {} }) => {
   const { workcenters = [], data = {} } = productionData;
   const shiftData = data[activeShift] || [];
   const [hoverData, setHoverData] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null); // For mobile tap interaction
+  const [hourlyTargets, setHourlyTargets] = useState({});
   
   // Calculate total production for each workcenter
   const totals = workcenters.reduce((acc, workcenter) => {
@@ -18,6 +19,15 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
     acc[workcenter] = total;
     return acc;
   }, {});
+
+  // Process target data for each workcenter
+  useEffect(() => {
+    if (targetData && targetData.hourlyTargets) {
+      // Filter for active shift
+      const shiftTargets = targetData.hourlyTargets[activeShift] || {};
+      setHourlyTargets(shiftTargets);
+    }
+  }, [targetData, activeShift]);
 
   // Handle mobile tap on cell
   const handleCellTap = (data) => {
@@ -31,6 +41,17 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
       }
     }
   };
+
+  // Calculate daily targets for workcenters
+  const dailyTargets = {};
+  if (targetData && targetData.dailyTargets) {
+    Object.keys(targetData.dailyTargets).forEach(workcenter => {
+      // Filter for the active shift
+      if (targetData.dailyTargets[workcenter].shift === activeShift) {
+        dailyTargets[workcenter] = targetData.dailyTargets[workcenter].planQty;
+      }
+    });
+  }
 
   // No workcenters to display
   if (workcenters.length === 0) {
@@ -47,6 +68,14 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
     );
   }
   
+  // Get target for the specific cell being hovered
+  const getTargetForCell = (workcenter, timeSlot) => {
+    if (hourlyTargets && hourlyTargets[workcenter]) {
+      return hourlyTargets[workcenter];
+    }
+    return 85; // Default target if not available
+  };
+
   return (
     <div className="w-full h-full">
       <div className="relative">
@@ -80,12 +109,12 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 text-sm">Target</span>
-                    <span className="font-mono text-green-400">85</span>
+                    <span className="font-mono text-green-400">{hoverData.target || getTargetForCell(hoverData.workcenter, hoverData.timeSlot)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 text-sm">Variance</span>
-                    <span className={`font-mono font-medium ${(hoverData.value || 0) >= 85 ? 'text-green-400' : 'text-red-400'}`}>
-                      {((hoverData.value || 0) - 85).toFixed(0)}
+                    <span className={`font-mono font-medium ${(hoverData.value || 0) >= (hoverData.target || 85) ? 'text-green-400' : 'text-red-400'}`}>
+                      {((hoverData.value || 0) - (hoverData.target || 85)).toFixed(0)}
                     </span>
                   </div>
                 </div>
@@ -126,12 +155,12 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
                   </div>
                   <div className="bg-slate-700/60 rounded p-2 text-center">
                     <div className="text-xs text-slate-400">Target</div>
-                    <div className="font-mono text-green-400 text-lg">85</div>
+                    <div className="font-mono text-green-400 text-lg">{selectedCell.target || getTargetForCell(selectedCell.workcenter, selectedCell.timeSlot)}</div>
                   </div>
                   <div className="bg-slate-700/60 rounded p-2 text-center">
                     <div className="text-xs text-slate-400">Variance</div>
-                    <div className={`font-mono font-medium text-lg ${(selectedCell.value || 0) >= 85 ? 'text-green-400' : 'text-red-400'}`}>
-                      {((selectedCell.value || 0) - 85).toFixed(0)}
+                    <div className={`font-mono font-medium text-lg ${(selectedCell.value || 0) >= (selectedCell.target || 85) ? 'text-green-400' : 'text-red-400'}`}>
+                      {((selectedCell.value || 0) - (selectedCell.target || 85)).toFixed(0)}
                     </div>
                   </div>
                 </div>
@@ -149,7 +178,8 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
               <WorkcenterHeader 
                 workcenters={workcenters} 
                 totals={totals}
-                mobileView={mobileView} 
+                mobileView={mobileView}
+                dailyTargets={dailyTargets}
               />
             </div>
             
@@ -167,6 +197,7 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
                   isSelected={selectedCell?.timeSlot === slotNumber}
                   selectedWorkcenter={selectedCell?.workcenter}
                   mobileView={mobileView}
+                  hourlyTargets={hourlyTargets}
                 />
               ))}
             </div>
@@ -178,21 +209,26 @@ const DashboardGrid = ({ productionData, activeShift, mobileView }) => {
       <div className="mt-6 sm:mt-8 bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-700/50">
         <h3 className="text-sm font-medium text-slate-300 mb-2 sm:mb-3">Shift Production Summary</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
-          {workcenters.map(workcenter => (
-            <div key={workcenter} className="bg-slate-800 rounded-md p-2 sm:p-3 border border-slate-700">
-              <div className="text-xs text-slate-400 mb-1 truncate">{workcenter}</div>
-              <div className="text-lg sm:text-xl font-bold font-mono">{totals[workcenter] || 0}</div>
-              <div className="mt-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full rounded-full ${
-                    (totals[workcenter] || 0) < 150 ? 'bg-red-500' :
-                    (totals[workcenter] || 0) < 400 ? 'bg-yellow-500' : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${Math.min(((totals[workcenter] || 0) / 600) * 100, 100)}%` }}
-                ></div>
+          {workcenters.map(workcenter => {
+            // Get daily target for this workcenter if available
+            const dailyTarget = dailyTargets[workcenter] || 600; // Default daily target
+            
+            return (
+              <div key={workcenter} className="bg-slate-800 rounded-md p-2 sm:p-3 border border-slate-700">
+                <div className="text-xs text-slate-400 mb-1 truncate">{workcenter}</div>
+                <div className="text-lg sm:text-xl font-bold font-mono">{totals[workcenter] || 0}</div>
+                <div className="mt-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${
+                      (totals[workcenter] || 0) < (dailyTarget * 0.25) ? 'bg-red-500' :
+                      (totals[workcenter] || 0) < (dailyTarget * 0.75) ? 'bg-yellow-500' : 'bg-emerald-500'
+                    }`}
+                    style={{ width: `${Math.min(((totals[workcenter] || 0) / dailyTarget) * 100, 100)}%` }}
+                  ></div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

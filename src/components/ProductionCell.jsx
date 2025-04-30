@@ -1,12 +1,16 @@
 // src/components/ProductionCell.jsx
 import { motion } from 'framer-motion';
 
-const ProductionCell = ({ value, workcenter, timeSlot, setHoverData, onCellTap, isSelected, mobileView }) => {
-  // Define color scale based on production value
-  const getColorClass = (val) => {
+const ProductionCell = ({ value, workcenter, timeSlot, setHoverData, onCellTap, isSelected, mobileView, target = 85 }) => {
+  // Define color scale based on production value compared to target
+  const getColorClass = (val, target) => {
     if (val === 0) return 'bg-[#1f1f1f] text-[#9e9e9e] border-[#2d2d2d]'; 
-    if (val < 20) return 'bg-red-700 text-white'; 
-    if (val < 80) return 'bg-amber-500 text-white'; 
+    
+    // Calculate percentage of target achieved
+    const percentage = (val / target) * 100;
+    
+    if (percentage < 50) return 'bg-red-700 text-white'; 
+    if (percentage < 90) return 'bg-amber-500 text-white'; 
     return 'bg-emerald-600 text-white'; 
   };
 
@@ -19,6 +23,7 @@ const ProductionCell = ({ value, workcenter, timeSlot, setHoverData, onCellTap, 
           workcenter,
           timeSlot,
           value,
+          target,
           // Not actually used for position in mobile mode
           position: { x: 0, y: 0 }
         });
@@ -31,6 +36,7 @@ const ProductionCell = ({ value, workcenter, timeSlot, setHoverData, onCellTap, 
           workcenter,
           timeSlot,
           value,
+          target,
           position: { x: rect.x, y: rect.y }
         });
       }
@@ -47,7 +53,7 @@ const ProductionCell = ({ value, workcenter, timeSlot, setHoverData, onCellTap, 
     <motion.div 
       className={`h-14 w-full rounded-md flex items-center justify-center font-mono text-xl font-bold border ${
         isSelected ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-slate-900' : ''
-      } ${getColorClass(value)}`}
+      } ${getColorClass(value, target)}`}
       whileHover={!mobileView ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
       whileTap={mobileView ? { scale: 0.95, transition: { duration: 0.1 } } : {}}
       onMouseEnter={handleInteraction}

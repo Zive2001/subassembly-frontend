@@ -12,7 +12,8 @@ const TimeSlotRow = ({
   onCellTap,
   isSelected,
   selectedWorkcenter,
-  mobileView
+  mobileView,
+  hourlyTargets = {}
 }) => {
   const timeSlotLabel = timeSlotToLabel(slotNumber)[shift.toLowerCase()];
   
@@ -42,6 +43,7 @@ const TimeSlotRow = ({
             onCellTap={onCellTap}
             isSelected={isSelected && selectedWorkcenter === workcenter}
             mobileView={mobileView}
+            target={hourlyTargets[workcenter] || 85} // Use hourly target if available, default to 85
           />
         </div>
       ))}
