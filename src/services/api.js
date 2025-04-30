@@ -49,4 +49,15 @@ export const getProductionDataByDate = async (date) => {
     }
   };
 
+  export const getWorkcenters = async () => {
+    try {
+      const response = await api.get('/api/workcenters');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching workcenters:', error);
+      throw error;
+    }
+  };
+  
+
 export default api;

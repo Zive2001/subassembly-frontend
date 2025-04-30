@@ -34,10 +34,14 @@ export const useProductionData = (selectedDate) => {
         setLoading(true);
         let data;
         
+        // Convert the date to ISO format for the API if it's not today
+        // This is the only change needed - convert the date format for API calls
         if (isToday) {
           data = await getProductionData();
         } else {
-          data = await getProductionDataByDate(selectedDate);
+          // Convert to ISO format for the API
+          const isoDateString = new Date(selectedDate).toISOString();
+          data = await getProductionDataByDate(isoDateString);
         }
         
         setProductionData(data);
@@ -69,3 +73,5 @@ export const useProductionData = (selectedDate) => {
 
   return { productionData, loading, error, lastUpdated };
 };
+
+export default useProductionData;
