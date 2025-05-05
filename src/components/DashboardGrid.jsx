@@ -1,4 +1,3 @@
-// src/components/DashboardGrid.jsx
 import { useState, useEffect } from 'react';
 import WorkcenterHeader from './WorkcenterHeader';
 import TimeSlotRow from './TimeSlotRow';
@@ -22,10 +21,10 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
 
   // Process target data for each workcenter
   useEffect(() => {
-    if (targetData && targetData.hourlyTargets) {
-      // Filter for active shift
-      const shiftTargets = targetData.hourlyTargets[activeShift] || {};
-      setHourlyTargets(shiftTargets);
+    if (targetData && targetData.hourlyTargets && targetData.hourlyTargets[activeShift]) {
+      setHourlyTargets(targetData.hourlyTargets[activeShift]);
+    } else {
+      setHourlyTargets({});
     }
   }, [targetData, activeShift]);
 
@@ -69,11 +68,8 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
   }
   
   // Get target for the specific cell being hovered
-  const getTargetForCell = (workcenter, timeSlot) => {
-    if (hourlyTargets && hourlyTargets[workcenter]) {
-      return hourlyTargets[workcenter];
-    }
-    return 85; // Default target if not available
+  const getTargetForCell = (workcenter) => {
+    return hourlyTargets[workcenter] || 85;
   };
 
   return (
@@ -109,12 +105,16 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 text-sm">Target</span>
-                    <span className="font-mono text-green-400">{hoverData.target || getTargetForCell(hoverData.workcenter, hoverData.timeSlot)}</span>
+                    <span className="font-mono text-green-400">
+                      {getTargetForCell(hoverData.workcenter)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 text-sm">Variance</span>
-                    <span className={`font-mono font-medium ${(hoverData.value || 0) >= (hoverData.target || 85) ? 'text-green-400' : 'text-red-400'}`}>
-                      {((hoverData.value || 0) - (hoverData.target || 85)).toFixed(0)}
+                    <span className={`font-mono font-medium ${
+                      (hoverData.value || 0) >= getTargetForCell(hoverData.workcenter) ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {((hoverData.value || 0) - getTargetForCell(hoverData.workcenter)).toFixed(0)}
                     </span>
                   </div>
                 </div>
@@ -155,12 +155,16 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
                   </div>
                   <div className="bg-slate-700/60 rounded p-2 text-center">
                     <div className="text-xs text-slate-400">Target</div>
-                    <div className="font-mono text-green-400 text-lg">{selectedCell.target || getTargetForCell(selectedCell.workcenter, selectedCell.timeSlot)}</div>
+                    <div className="font-mono text-green-400 text-lg">
+                      {getTargetForCell(selectedCell.workcenter)}
+                    </div>
                   </div>
                   <div className="bg-slate-700/60 rounded p-2 text-center">
                     <div className="text-xs text-slate-400">Variance</div>
-                    <div className={`font-mono font-medium text-lg ${(selectedCell.value || 0) >= (selectedCell.target || 85) ? 'text-green-400' : 'text-red-400'}`}>
-                      {((selectedCell.value || 0) - (selectedCell.target || 85)).toFixed(0)}
+                    <div className={`font-mono font-medium text-lg ${
+                      (selectedCell.value || 0) >= getTargetForCell(selectedCell.workcenter) ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {((selectedCell.value || 0) - getTargetForCell(selectedCell.workcenter)).toFixed(0)}
                     </div>
                   </div>
                 </div>

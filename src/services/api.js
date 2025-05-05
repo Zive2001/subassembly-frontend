@@ -9,6 +9,7 @@ const api = axios.create({
   },
 });
 
+// Production Data Services
 export const getProductionData = async () => {
   try {
     const response = await api.get('/api/production');
@@ -28,36 +29,76 @@ export const refreshProductionData = async () => {
     throw error;
   }
 };
-// Add these new functions
-export const getProductionDataByDate = async (date) => {
-    try {
-      const response = await api.get(`/api/production/${date}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching production data by date:', error);
-      throw error;
-    }
-  };
-  
-  export const getAvailableDates = async () => {
-    try {
-      const response = await api.get('/api/available-dates');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching available dates:', error);
-      throw error;
-    }
-  };
 
-  export const getWorkcenters = async () => {
-    try {
-      const response = await api.get('/api/workcenters');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching workcenters:', error);
-      throw error;
-    }
-  };
-  
+export const getProductionDataByDate = async (date) => {
+  try {
+    const response = await api.get(`/api/production/${date}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching production data by date:', error);
+    throw error;
+  }
+};
+
+export const getAvailableDates = async () => {
+  try {
+    const response = await api.get('/api/available-dates');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching available dates:', error);
+    throw error;
+  }
+};
+
+export const getWorkcenters = async () => {
+  try {
+    const response = await api.get('/api/workcenters');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching workcenters:', error);
+    throw error;
+  }
+};
+
+// Target Services
+export const setTarget = async (targetData) => {
+  try {
+    const response = await api.post('/api/targets', targetData);
+    return response.data;
+  } catch (error) {
+    console.error('Error setting target:', error);
+    throw error;
+  }
+};
+
+export const getTargetsByDate = async (date) => {
+  try {
+    const response = await api.get(`/api/targets/${date}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching targets:', error);
+    throw error;
+  }
+};
+
+export const getHourlyTargetsByDate = async (date) => {
+  try {
+    const response = await api.get(`/api/hourly-targets/${date}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching hourly targets:', error);
+    throw error;
+  }
+};
+
+export const getProductionWithTargets = async (date) => {
+  try {
+    const response = await api.get(`/api/production-targets/${date}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching production with targets:', error);
+    throw error;
+  }
+};
 
 export default api;

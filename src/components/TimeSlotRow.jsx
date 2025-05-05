@@ -1,4 +1,3 @@
-// src/components/TimeSlotRow.jsx
 import ProductionCell from './ProductionCell';
 import { timeSlotToLabel } from '../utils/formatters';
 import { motion } from 'framer-motion';
@@ -33,20 +32,25 @@ const TimeSlotRow = ({
       </div>
       
       {/* Production cells for each workcenter */}
-      {workcenters.map((workcenter) => (
-        <div key={workcenter} className="h-full">
-          <ProductionCell 
-            value={data[workcenter] || 0} 
-            workcenter={workcenter}
-            timeSlot={slotNumber}
-            setHoverData={setHoverData}
-            onCellTap={onCellTap}
-            isSelected={isSelected && selectedWorkcenter === workcenter}
-            mobileView={mobileView}
-            target={hourlyTargets[workcenter] || 85} // Use hourly target if available, default to 85
-          />
-        </div>
-      ))}
+      {workcenters.map((workcenter) => {
+        // Get the specific hourly target for this workcenter
+        const targetValue = hourlyTargets[workcenter] || 85;
+        
+        return (
+          <div key={workcenter} className="h-full">
+            <ProductionCell 
+              value={data[workcenter] || 0} 
+              workcenter={workcenter}
+              timeSlot={slotNumber}
+              setHoverData={setHoverData}
+              onCellTap={onCellTap}
+              isSelected={isSelected && selectedWorkcenter === workcenter}
+              mobileView={mobileView}
+              target={targetValue} // Pass the specific target for this workcenter
+            />
+          </div>
+        );
+      })}
     </motion.div>
   );
 };
