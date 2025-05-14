@@ -1,14 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import WorkcenterHeader from './WorkcenterHeader';
 import TimeSlotRow from './TimeSlotRow';
-import { motion, AnimatePresence } from 'framer-motion';
 
-const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {} }) => {
+const DashboardGrid = ({ productionData, targetData, activeShift, mobileView }) => {
   const { workcenters = [], data = {} } = productionData;
+  const { data: targetDataValues = {} } = targetData;
+  
+  // Define hourlyTargets here based on targetData for backward compatibility
+  const hourlyTargets = {
+    Morning: {},
+    Evening: {}
+  };
+  
+  // If you have targets in the old format, populate hourlyTargets
+  if (targetData && targetData.hourlyTargets) {
+    // If targetData already has hourlyTargets property, use it directly
+    hourlyTargets.Morning = targetData.hourlyTargets.Morning || {};
+    hourlyTargets.Evening = targetData.hourlyTargets.Evening || {};
+  }
+  
   const shiftData = data[activeShift] || [];
+  const shiftTargetData = targetDataValues[activeShift] || [];
+  
+  // Now useState will be defined
   const [hoverData, setHoverData] = useState(null);
   const [selectedCell, setSelectedCell] = useState(null); // For mobile tap interaction
-  const [hourlyTargets, setHourlyTargets] = useState({});
+  
   
   // Calculate total production for each workcenter
   const totals = workcenters.reduce((acc, workcenter) => {
@@ -18,15 +36,19 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
     acc[workcenter] = total;
     return acc;
   }, {});
-
-  // Process target data for each workcenter
-  useEffect(() => {
-    if (targetData && targetData.hourlyTargets && targetData.hourlyTargets[activeShift]) {
-      setHourlyTargets(targetData.hourlyTargets[activeShift]);
-    } else {
-      setHourlyTargets({});
-    }
-  }, [targetData, activeShift]);
+  
+  // Calculate total targets for each workcenter
+  const totalTargets = workcenters.reduce((acc, workcenter) => {
+    const total = shiftTargetData.reduce((sum, hourData) => {
+      // Check if there's target data for this workcenter
+      if (hourData && typeof hourData[workcenter] === 'object') {
+        return sum + (hourData[workcenter].target || 0);
+      }
+      return sum;
+    }, 0);
+    acc[workcenter] = total;
+    return acc;
+  }, {});
 
   // Handle mobile tap on cell
   const handleCellTap = (data) => {
@@ -40,17 +62,6 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
       }
     }
   };
-
-  // Calculate daily targets for workcenters
-  const dailyTargets = {};
-  if (targetData && targetData.dailyTargets) {
-    Object.keys(targetData.dailyTargets).forEach(workcenter => {
-      // Filter for the active shift
-      if (targetData.dailyTargets[workcenter].shift === activeShift) {
-        dailyTargets[workcenter] = targetData.dailyTargets[workcenter].planQty;
-      }
-    });
-  }
 
   // No workcenters to display
   if (workcenters.length === 0) {
@@ -68,8 +79,14 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
   }
   
   // Get target for the specific cell being hovered
-  const getTargetForCell = (workcenter) => {
-    return hourlyTargets[workcenter] || 85;
+  const getTargetForCell = (timeSlotIndex, workcenter) => {
+    if (shiftTargetData && 
+        shiftTargetData[timeSlotIndex] && 
+        shiftTargetData[timeSlotIndex][workcenter] && 
+        typeof shiftTargetData[timeSlotIndex][workcenter] === 'object') {
+      return shiftTargetData[timeSlotIndex][workcenter].target || 0;
+    }
+    return 0;
   };
 
   return (
@@ -106,17 +123,29 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 text-sm">Target</span>
                     <span className="font-mono text-green-400">
-                      {getTargetForCell(hoverData.workcenter)}
+                      {hoverData.target || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400 text-sm">Variance</span>
                     <span className={`font-mono font-medium ${
-                      (hoverData.value || 0) >= getTargetForCell(hoverData.workcenter) ? 'text-green-400' : 'text-red-400'
+                      (hoverData.value || 0) >= (hoverData.target || 0) ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {((hoverData.value || 0) - getTargetForCell(hoverData.workcenter)).toFixed(0)}
+                      {((hoverData.value || 0) - (hoverData.target || 0))}
                     </span>
                   </div>
+                  {hoverData.target > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400 text-sm">Achievement</span>
+                      <span className={`font-mono font-medium ${
+                        (hoverData.value || 0) >= (hoverData.target || 0) ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {hoverData.target > 0 
+                          ? `${Math.round((hoverData.value || 0) / hoverData.target * 100)}%` 
+                          : '0%'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -156,18 +185,37 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
                   <div className="bg-slate-700/60 rounded p-2 text-center">
                     <div className="text-xs text-slate-400">Target</div>
                     <div className="font-mono text-green-400 text-lg">
-                      {getTargetForCell(selectedCell.workcenter)}
+                      {selectedCell.target || 0}
                     </div>
                   </div>
                   <div className="bg-slate-700/60 rounded p-2 text-center">
                     <div className="text-xs text-slate-400">Variance</div>
                     <div className={`font-mono font-medium text-lg ${
-                      (selectedCell.value || 0) >= getTargetForCell(selectedCell.workcenter) ? 'text-green-400' : 'text-red-400'
+                      (selectedCell.value || 0) >= (selectedCell.target || 0) ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {((selectedCell.value || 0) - getTargetForCell(selectedCell.workcenter)).toFixed(0)}
+                      {((selectedCell.value || 0) - (selectedCell.target || 0))}
                     </div>
                   </div>
                 </div>
+                {selectedCell.target > 0 && (
+                  <div className="mt-2 bg-slate-700/60 rounded p-2">
+                    <div className="text-xs text-slate-400 mb-1">Achievement</div>
+                    <div className="w-full h-2 bg-slate-800 rounded overflow-hidden">
+                      <div 
+                        className={`h-full ${
+                          (selectedCell.value || 0) >= (selectedCell.target || 0) ? 'bg-green-500' : 
+                          (selectedCell.value || 0) >= (selectedCell.target * 0.8 || 0) ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${Math.min(((selectedCell.value || 0) / (selectedCell.target || 1)) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-right text-xs mt-1">
+                      {selectedCell.target > 0 
+                        ? `${Math.round((selectedCell.value || 0) / selectedCell.target * 100)}%` 
+                        : '0%'}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -183,27 +231,28 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
                 workcenters={workcenters} 
                 totals={totals}
                 mobileView={mobileView}
-                dailyTargets={dailyTargets}
+                dailyTargets={totalTargets}
               />
             </div>
             
             {/* Time slots rows */}
             <div className="space-y-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((slotNumber) => (
-                <TimeSlotRow 
-                  key={slotNumber}
-                  slotNumber={slotNumber}
-                  workcenters={workcenters}
-                  data={shiftData[slotNumber - 1] || {}}
-                  shift={activeShift}
-                  setHoverData={setHoverData}
-                  onCellTap={handleCellTap}
-                  isSelected={selectedCell?.timeSlot === slotNumber}
-                  selectedWorkcenter={selectedCell?.workcenter}
-                  mobileView={mobileView}
-                  hourlyTargets={hourlyTargets}
-                />
-              ))}
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((slotNumber) => (
+    <TimeSlotRow 
+      key={slotNumber}
+      slotNumber={slotNumber}
+      workcenters={workcenters}
+      data={shiftData[slotNumber - 1] || {}}
+      targetData={shiftTargetData[slotNumber - 1] || {}} // Pass the correct target data
+      shift={activeShift}
+      setHoverData={setHoverData}
+      onCellTap={handleCellTap}
+      isSelected={selectedCell?.timeSlot === slotNumber}
+      selectedWorkcenter={selectedCell?.workcenter}
+      mobileView={mobileView}
+      hourlyTargets={hourlyTargets[activeShift] || {}} // Now hourlyTargets is defined
+    />
+  ))}
             </div>
           </div>
         </div>
@@ -214,22 +263,33 @@ const DashboardGrid = ({ productionData, activeShift, mobileView, targetData = {
         <h3 className="text-sm font-medium text-slate-300 mb-2 sm:mb-3">Shift Production Summary</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
           {workcenters.map(workcenter => {
-            // Get daily target for this workcenter if available
-            const dailyTarget = dailyTargets[workcenter] || 600; // Default daily target
+            const actual = totals[workcenter] || 0;
+            const target = totalTargets[workcenter] || 0;
+            const achievement = target > 0 ? (actual / target * 100) : 0;
             
             return (
               <div key={workcenter} className="bg-slate-800 rounded-md p-2 sm:p-3 border border-slate-700">
                 <div className="text-xs text-slate-400 mb-1 truncate">{workcenter}</div>
-                <div className="text-lg sm:text-xl font-bold font-mono">{totals[workcenter] || 0}</div>
+                <div className="flex justify-between items-baseline">
+                  <div className="text-lg sm:text-xl font-bold font-mono">{actual}</div>
+                  {target > 0 && (
+                    <div className="text-sm text-slate-400 font-mono">/{target}</div>
+                  )}
+                </div>
                 <div className="mt-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className={`h-full rounded-full ${
-                      (totals[workcenter] || 0) < (dailyTarget * 0.25) ? 'bg-red-500' :
-                      (totals[workcenter] || 0) < (dailyTarget * 0.75) ? 'bg-yellow-500' : 'bg-emerald-500'
+                      achievement < 25 ? 'bg-red-500' :
+                      achievement < 75 ? 'bg-yellow-500' : 'bg-emerald-500'
                     }`}
-                    style={{ width: `${Math.min(((totals[workcenter] || 0) / dailyTarget) * 100, 100)}%` }}
+                    style={{ width: `${Math.min(achievement, 100)}%` }}
                   ></div>
                 </div>
+                {target > 0 && (
+                  <div className="text-right text-xs mt-0.5 text-slate-400">
+                    {`${Math.round(achievement)}%`}
+                  </div>
+                )}
               </div>
             );
           })}
