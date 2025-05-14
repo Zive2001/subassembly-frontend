@@ -44,3 +44,11 @@ export const getProductionWithTargets = async (date) => {
     throw error;
   }
 };
+
+// Export all the functions
+export default {
+  setTarget,
+  getTargetsByDate,
+  getHourlyTargetsByDate,
+  getProductionWithTargets
+};

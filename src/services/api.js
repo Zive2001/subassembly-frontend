@@ -1,6 +1,13 @@
+// services/api.js
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://sg-prod-bdyapp-subdashback.azurewebsites.net';
+// For local development, use http://localhost:3000
+// In production, use the Azure URL
+const API_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:3000' 
+  : 'https://sg-prod-bdyapp-subdashback.azurewebsites.net';
+
+console.log('Using API URL:', API_URL); // Helpful for debugging
 
 const api = axios.create({
   baseURL: API_URL,
@@ -60,45 +67,7 @@ export const getWorkcenters = async () => {
   }
 };
 
-// Target Services
-export const setTarget = async (targetData) => {
-  try {
-    const response = await api.post('/api/targets', targetData);
-    return response.data;
-  } catch (error) {
-    console.error('Error setting target:', error);
-    throw error;
-  }
-};
-
-export const getTargetsByDate = async (date) => {
-  try {
-    const response = await api.get(`/api/targets/${date}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching targets:', error);
-    throw error;
-  }
-};
-
-export const getHourlyTargetsByDate = async (date) => {
-  try {
-    const response = await api.get(`/api/hourly-targets/${date}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching hourly targets:', error);
-    throw error;
-  }
-};
-
-export const getProductionWithTargets = async (date) => {
-  try {
-    const response = await api.get(`/api/production-targets/${date}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching production with targets:', error);
-    throw error;
-  }
-};
+// We'll remove the duplicate target-related functions from here
+// and import them from targetService.js instead
 
 export default api;
