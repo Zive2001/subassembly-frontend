@@ -1,3 +1,4 @@
+// components/TimeSlotRow.jsx
 import ProductionCell from './ProductionCell';
 import { timeSlotToLabel } from '../utils/formatters';
 import { motion } from 'framer-motion';
@@ -6,16 +7,28 @@ const TimeSlotRow = ({
   slotNumber, 
   workcenters, 
   data, 
+  targetData = {}, // Changed: Now we expect the target data in the proper format
   shift, 
   setHoverData, 
   onCellTap,
   isSelected,
   selectedWorkcenter,
   mobileView,
-  hourlyTargets = {}
+  hourlyTargets = {} // Keep for backwards compatibility
 }) => {
   const timeSlotLabel = timeSlotToLabel(slotNumber)[shift.toLowerCase()];
   
+  // Function to get the target for a workcenter
+  const getTargetForWorkcenter = (workcenter) => {
+    // First try the new format
+    if (targetData && targetData[workcenter] && typeof targetData[workcenter] === 'object') {
+      return targetData[workcenter].target || 0;
+    }
+    
+    // Fallback to old format
+    return hourlyTargets[workcenter] || 85;
+  };
+
   return (
     <motion.div 
       className="grid grid-cols-[80px_repeat(auto-fill,minmax(80px,1fr))] sm:grid-cols-[120px_repeat(auto-fill,minmax(100px,1fr))] gap-1.5"
@@ -33,8 +46,11 @@ const TimeSlotRow = ({
       
       {/* Production cells for each workcenter */}
       {workcenters.map((workcenter) => {
-        // Get the specific hourly target for this workcenter
-        const targetValue = hourlyTargets[workcenter] || 85;
+        // Get the target value
+        const targetValue = getTargetForWorkcenter(workcenter);
+        
+        // Get status if available
+        const status = targetData[workcenter]?.status || 'grey';
         
         return (
           <div key={workcenter} className="h-full">
@@ -46,7 +62,8 @@ const TimeSlotRow = ({
               onCellTap={onCellTap}
               isSelected={isSelected && selectedWorkcenter === workcenter}
               mobileView={mobileView}
-              target={targetValue} // Pass the specific target for this workcenter
+              target={targetValue}
+              status={status}
             />
           </div>
         );

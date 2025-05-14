@@ -320,12 +320,13 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="p-2 sm:p-4 overflow-x-auto">
-                  <DashboardGrid 
-                    productionData={filteredProductionData} 
-                    activeShift={activeShift}
-                    mobileView={mobileView}
-                    targetData={targetData}
-                  />
+                <DashboardGrid 
+  productionData={filteredProductionData}
+  targetData={targetData}
+  activeShift={activeShift}
+  mobileView={mobileView}
+  hourlyTargets={targetData.hourlyTargets || { Morning: {}, Evening: {} }}
+/>
                 </div>
               </div>
             </motion.div>
