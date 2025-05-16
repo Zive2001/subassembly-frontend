@@ -1,12 +1,49 @@
 // src/components/ShiftTab.jsx
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 const ShiftTab = ({ activeShift, setActiveShift }) => {
+  // Function to determine current shift based on time in Sri Lanka
+  const determineCurrentShift = () => {
+    // Create date object for Sri Lanka time (UTC+5:30)
+    const now = new Date();
+    const sriLankaOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    const utcOffset = now.getTimezoneOffset() * 60 * 1000; // Local offset in milliseconds
+    const sriLankaTime = new Date(now.getTime() + utcOffset + sriLankaOffset);
+    
+    // Get hours and minutes in Sri Lanka time
+    const hours = sriLankaTime.getHours();
+    const minutes = sriLankaTime.getMinutes();
+    
+    // Convert to decimal for easier comparison
+    const timeDecimal = hours + (minutes / 60);
+    
+    // Morning shift: 5:30 AM - 1:30 PM (5.5 - 13.5)
+    // Evening shift: 1:30 PM - 9:30 PM (13.5 - 21.5)
+    return (timeDecimal >= 5.5 && timeDecimal < 13.5) ? 'Morning' : 'Evening';
+  };
+  
+  // Set shift automatically on initial load
+  useEffect(() => {
+    const currentShift = determineCurrentShift();
+    setActiveShift(currentShift);
+    
+    // Optional: Update shift automatically every minute
+    const intervalId = setInterval(() => {
+      const updatedShift = determineCurrentShift();
+      if (updatedShift !== activeShift) {
+        setActiveShift(updatedShift);
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="bg-slate-800/80 rounded-lg p-1 w-full relative overflow-hidden">
       <motion.div 
         className="absolute top-1 bottom-1 bg-blue-600 rounded"
-        initial={{ width: '50%', x: activeShift === 'Morning' ? 0 : '100%' }}
+        initial={false}
         animate={{ 
           x: activeShift === 'Morning' ? 0 : '50%',
         }}

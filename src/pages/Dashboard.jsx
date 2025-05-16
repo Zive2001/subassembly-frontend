@@ -8,11 +8,13 @@ import DashboardGrid from '../components/DashboardGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { getWorkcentersBySection } from '../utils/sectionConfig';
+import { determineCurrentShift } from '../utils/timeUtils'; // Import the utility
 
 const Dashboard = () => {
-  const [activeShift, setActiveShift] = useState('Morning');
-  const [activeSection, setActiveSection] = useState('All'); // Default to showing all sections
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd')); // Default to today
+  // Initialize with the current shift based on Sri Lanka time
+  const [activeShift, setActiveShift] = useState(determineCurrentShift());
+  const [activeSection, setActiveSection] = useState('All'); 
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const { productionData, targetData, loading, error, lastUpdated } = useProductionData(selectedDate);
   const [filteredProductionData, setFilteredProductionData] = useState({
     workcenters: [],
@@ -21,7 +23,7 @@ const Dashboard = () => {
       Evening: []
     }
   });
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Default closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileView, setMobileView] = useState(window.innerWidth < 768);
 
   // Handle window resize to detect mobile view
@@ -202,7 +204,7 @@ const Dashboard = () => {
               animate={{ x: 0 }}
               exit={{ x: mobileView ? -280 : -260 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
+            >   
               {/* Mobile close button */}
               {mobileView && (
                 <div className="flex justify-between items-center px-4 py-3 border-b border-slate-800">
@@ -226,8 +228,10 @@ const Dashboard = () => {
                   <div>
                     <h3 className="text-sm text-slate-400 mb-2">Shift</h3>
                     <ShiftTab activeShift={activeShift} setActiveShift={handleSetActiveShift} />
+                    <p className="text-xs text-slate-400 mt-1">
+                    * Active shift is automatically determined based on the current time
+                    </p>
                   </div>
-                  
                   {/* Section Selection */}
                   <div>
                     <h3 className="text-sm text-slate-400 mb-2">Section</h3>
