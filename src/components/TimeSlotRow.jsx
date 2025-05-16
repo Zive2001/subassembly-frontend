@@ -1,21 +1,22 @@
-// components/TimeSlotRow.jsx
 import ProductionCell from './ProductionCell';
 import { timeSlotToLabel } from '../utils/formatters';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 const TimeSlotRow = ({ 
   slotNumber, 
   workcenters, 
   data, 
-  targetData = {}, // Changed: Now we expect the target data in the proper format
+  targetData = {}, 
   shift, 
   setHoverData, 
   onCellTap,
   isSelected,
   selectedWorkcenter,
   mobileView,
-  hourlyTargets = {} // Keep for backwards compatibility
+  hourlyTargets = {} 
 }) => {
+  const [showTimeLabel, setShowTimeLabel] = useState(false);
   const timeSlotLabel = timeSlotToLabel(slotNumber)[shift.toLowerCase()];
   
   // Function to get the target for a workcenter
@@ -36,12 +37,19 @@ const TimeSlotRow = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: slotNumber * 0.03 }}
     >
-      {/* Time slot label */}
-      <div className={`bg-slate-800/80 text-white rounded-lg border border-slate-700/50 flex flex-col items-center justify-center py-1.5 ${
-        isSelected ? 'bg-slate-700 border-slate-600' : ''
-      }`}>
+      {/* Time slot label - modified to show number and time range on hover */}
+      <div 
+        className={`bg-slate-800/80 text-white rounded-lg border border-slate-700/50 flex flex-col items-center justify-center py-1.5 ${
+          isSelected ? 'bg-slate-700 border-slate-600' : ''
+        }`}
+        onMouseEnter={() => setShowTimeLabel(true)}
+        onMouseLeave={() => setShowTimeLabel(false)}
+      >
         <div className="text-lg font-bold text-white">{slotNumber}</div>
-        <div className="text-xs text-slate-400">{timeSlotLabel}</div>
+        {/* Only show time label on hover */}
+        {showTimeLabel && (
+          <div className="text-xs text-slate-400">{timeSlotLabel}</div>
+        )}
       </div>
       
       {/* Production cells for each workcenter */}

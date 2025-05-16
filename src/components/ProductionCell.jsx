@@ -63,12 +63,8 @@ const ProductionCell = ({ value, workcenter, timeSlot, setHoverData, onCellTap, 
       onMouseLeave={handleMouseLeave}
       onClick={mobileView ? handleInteraction : undefined}
     >
-      <div className="flex flex-col items-center">
-        <span>{value || 0}</span>
-        {safeTarget > 0 && (
-          <span className="text-xs opacity-80 -mt-1">{`/${safeTarget}`}</span>
-        )}
-      </div>
+      {/* Modified: Removed the target display, showing only the value */}
+      <span>{value || 0}</span>
     </motion.div>
   );
 };
