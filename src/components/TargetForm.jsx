@@ -1,6 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getWorkcenters } from '../services/api';
+import { setTarget, getTargetsByDate } from '../services/targetService';
 import { 
   ArrowPathIcon, 
   CheckCircleIcon, 
@@ -11,7 +14,8 @@ import {
   BoltIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
+  LightBulbIcon
 } from '@heroicons/react/24/outline';
 
 const TargetForm = ({ onTargetAdded, selectedDate }) => {
@@ -63,40 +67,12 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
     }));
   });
 
-  // Mock function for fetching workcenters
-  const mockGetWorkcenters = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(['S2CU4', 'S2LU', 'S2MU', 'S2CU1', 'S2CU3']);
-      }, 500);
-    });
-  };
-
-  // Mock function for setting targets
-  const mockSetTarget = (data) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve({ ...data, id: 'mock-id-123' });
-      }, 800);
-    });
-  };
-
-  // Mock function for getting targets by date
-  const mockGetTargetsByDate = () => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([]);
-      }, 500);
-    });
-  };
-
   // Fetch workcenters on component mount
   useEffect(() => {
     const fetchWorkcenters = async () => {
       try {
         setLoadingWorkcenters(true);
-        // Replace with mockGetWorkcenters for demo
-        const fetchedWorkcenters = await mockGetWorkcenters();
+        const fetchedWorkcenters = await getWorkcenters();
         
         if (fetchedWorkcenters && fetchedWorkcenters.length > 0) {
           setWorkcenters(fetchedWorkcenters);
@@ -134,16 +110,15 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
 
   // Update form data when selected date changes
   useEffect(() => {
-    if (selectedDate) {
-      setFormData(prev => ({
-        ...prev,
-        targetDate: selectedDate
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      targetDate: selectedDate || format(new Date(), 'yyyy-MM-dd')
+    }));
   }, [selectedDate]);
 
   // Update hourly targets when shift changes
   useEffect(() => {
+    const slots = getTimeSlots();
     calculateHourlyTargets(formData.planQty, formData.hours);
   }, [formData.shift]);
 
@@ -157,8 +132,7 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
   // Fetch existing targets for the selected workcenter and date
   const fetchExistingTargets = async () => {
     try {
-      // Replace with mockGetTargetsByDate for demo
-      const targets = await mockGetTargetsByDate(formData.targetDate);
+      const targets = await getTargetsByDate(formData.targetDate);
       if (targets && targets.length > 0) {
         const target = targets.find(t => 
           t.workcenter === formData.workcenter && 
@@ -265,6 +239,27 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
     });
   };
 
+  // Calculate efficiency
+  const calculateEfficiency = () => {
+    if (!formData.smv || !formData.teamMemberCount || !formData.hours || !formData.planQty) {
+      return null;
+    }
+    
+    const minutesAvailable = formData.hours * 60 * formData.teamMemberCount;
+    const minutesRequired = formData.planQty * formData.smv;
+    return (minutesRequired / minutesAvailable) * 100;
+  };
+
+  // Get efficiency color
+  const getEfficiencyColor = () => {
+    const efficiency = calculateEfficiency();
+    if (efficiency === null) return 'text-gray-400';
+    if (efficiency < 75) return 'text-red-500';
+    if (efficiency < 90) return 'text-yellow-500';
+    if (efficiency < 100) return 'text-gray-600';
+    return 'text-green-600';
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -276,12 +271,11 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
       // Prepare data for API
       const apiFormData = {
         ...formData,
-        targetDate: formData.targetDate,
+        targetDate: new Date(formData.targetDate).toISOString(),
         timeSlotTargets: advancedMode ? hourlyTargets : null
       };
       
-      // Replace with mockSetTarget for demo
-      const result = await mockSetTarget(apiFormData);
+      const result = await setTarget(apiFormData);
       setSuccess(true);
       setLoading(false);
       
@@ -398,9 +392,9 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
                     disabled={loadingWorkcenters}
                   >
                     {loadingWorkcenters ? (
-                      <option value="">Loading...</option>
+                      <option value="">Loading workcenters...</option>
                     ) : workcenters.length === 0 ? (
-                      <option value="">No workcenters</option>
+                      <option value="">No workcenters available</option>
                     ) : (
                       workcenters.map(wc => (
                         <option key={wc} value={wc}>{wc}</option>
@@ -495,6 +489,36 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
                 className="shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
               />
               <p className="mt-1 text-xs text-gray-500">Minutes required per unit</p>
+            </div>
+            
+            {/* Efficiency Indicator */}
+            <div className="mt-2">
+              <div className="bg-gray-50 rounded-md p-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <LightBulbIcon className="h-4 w-4 text-yellow-500 mr-1.5" />
+                    <span className="text-sm font-medium text-gray-700">Efficiency</span>
+                  </div>
+                  <div className={`text-base font-bold ${getEfficiencyColor()}`}>
+                    {calculateEfficiency() !== null 
+                      ? `${calculateEfficiency().toFixed(1)}%` 
+                      : 'N/A'}
+                  </div>
+                </div>
+                
+                {calculateEfficiency() !== null && (
+                  <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                    <div 
+                      className={`h-1.5 rounded-full ${
+                        calculateEfficiency() < 75 ? 'bg-red-500' :
+                        calculateEfficiency() < 90 ? 'bg-yellow-500' :
+                        calculateEfficiency() < 100 ? 'bg-gray-600' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(calculateEfficiency(), 100)}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -607,7 +631,7 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
               {loading 
                 ? 'Saving...' 
                 : loadingWorkcenters 
-                  ? 'Loading...' 
+                  ? 'Loading Workcenters...' 
                   : currentTargets 
                     ? 'Update Target' 
                     : 'Set Target'}

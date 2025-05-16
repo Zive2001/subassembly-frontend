@@ -41,14 +41,13 @@ const ShiftTab = ({ activeShift, setActiveShift }) => {
 
   return (
     <div className="bg-slate-800/80 rounded-lg p-1 w-full relative overflow-hidden">
-      <motion.div 
-        className="absolute top-1 bottom-1 bg-blue-600 rounded"
-        initial={false}
-        animate={{ 
-          x: activeShift === 'Morning' ? 0 : '50%',
+      {/* Replaced motion.div with a regular div with absolute positioning */}
+      <div 
+        className={`absolute top-1 bottom-1 bg-blue-600 rounded transition-transform duration-300 ease-spring`}
+        style={{ 
+          width: '50%', 
+          transform: activeShift === 'Morning' ? 'translateX(0%)' : 'translateX(100%)'
         }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        style={{ width: '50%' }}
       />
       
       <div className="grid grid-cols-2 relative z-10">
