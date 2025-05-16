@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getWorkcenters } from '../services/api';
 import { setTarget, getTargetsByDate } from '../services/targetService';
+import { determineCurrentShift } from '../utils/timeUtils'; // Import the utility function
 import { 
   ArrowPathIcon, 
   CheckCircleIcon, 
@@ -19,10 +19,11 @@ import {
 } from '@heroicons/react/24/outline';
 
 const TargetForm = ({ onTargetAdded, selectedDate }) => {
+  // Use determineCurrentShift to get the current shift based on Sri Lanka time
   const initialFormState = {
     targetDate: selectedDate || format(new Date(), 'yyyy-MM-dd'),
     workcenter: '',
-    shift: 'Morning',
+    shift: determineCurrentShift(), // Use the utility function here
     planQty: 240,
     hours: 8,
     teamMemberCount: 1,
@@ -40,6 +41,7 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [currentTargets, setCurrentTargets] = useState(null);
   const [showTimeSlots, setShowTimeSlots] = useState(true);
+  const [shiftManuallySelected, setShiftManuallySelected] = useState(false);
   
   // Time slots based on shift
   const morningTimeSlots = ['05:30-06:00', '06:00-07:00', '07:00-08:00', '08:00-09:30', '09:30-10:30', '10:30-11:30', '11:30-12:30', '12:30-13:30'];
@@ -66,6 +68,35 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
       targetQty: 0
     }));
   });
+
+  // Set up automatic shift detection
+  useEffect(() => {
+    // Only update shift automatically if it hasn't been manually selected
+    if (!shiftManuallySelected) {
+      // Check initial shift
+      const currentShift = determineCurrentShift();
+      if (currentShift !== formData.shift) {
+        setFormData(prev => ({
+          ...prev,
+          shift: currentShift
+        }));
+      }
+      
+      // Set up interval to check shift changes every minute
+      const shiftCheckInterval = setInterval(() => {
+        const updatedShift = determineCurrentShift();
+        if (updatedShift !== formData.shift && !shiftManuallySelected) {
+          setFormData(prev => ({
+            ...prev,
+            shift: updatedShift
+          }));
+        }
+      }, 60000); // Check every minute
+      
+      // Clean up interval on unmount
+      return () => clearInterval(shiftCheckInterval);
+    }
+  }, [formData.shift, shiftManuallySelected]);
 
   // Fetch workcenters on component mount
   useEffect(() => {
@@ -210,6 +241,11 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
       processedValue = parseInt(value, 10) || 0;
     } else if (name === 'smv') {
       processedValue = parseFloat(value) || 0;
+    }
+    
+    // If shift is being manually changed, set the manual selection flag
+    if (name === 'shift') {
+      setShiftManuallySelected(true);
     }
     
     setFormData({
@@ -374,6 +410,9 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
                   <span className="text-sm">Evening</span>
                 </label>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                * Active shift is automatically determined based on the current time
+              </p>
             </div>
             
             {/* Workcenter & Date */}

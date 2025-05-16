@@ -80,25 +80,24 @@ const TargetSettings = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Header with back button */}
-      <div className="mb-4 flex items-center">
+      {/* Main heading with gradient and back button */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+            Production Target Settings
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Manage and monitor production targets for your workcenters
+          </p>
+        </div>
+        
         <Link 
           to="/"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-200"
+          title="Back to Dashboard"
         >
-          <ArrowLeftIcon className="h-5 w-5 mr-2" />
-          <span>Dashboard</span>
+          <ArrowLeftIcon className="h-6 w-6" />
         </Link>
-      </div>
-      
-      {/* Main heading with gradient */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
-          Production Target Settings
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Manage and monitor production targets for your workcenters
-        </p>
       </div>
       
       {/* Success message */}

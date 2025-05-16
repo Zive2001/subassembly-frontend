@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [activeShift, setActiveShift] = useState(determineCurrentShift());
   const [activeSection, setActiveSection] = useState('All'); 
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [shiftManuallySelected, setShiftManuallySelected] = useState(false);
   const { productionData, targetData, loading, error, lastUpdated } = useProductionData(selectedDate);
   const [filteredProductionData, setFilteredProductionData] = useState({
     workcenters: [],
@@ -40,10 +41,39 @@ const Dashboard = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Reset to Morning shift when changing dates
+  // Set up shift auto-change functionality
   useEffect(() => {
-    setActiveShift('Morning');
-  }, [selectedDate]);
+    // Only apply auto-shift detection for current date and if shift wasn't manually selected
+    if (selectedDate === format(new Date(), 'yyyy-MM-dd') && !shiftManuallySelected) {
+      // Check initial shift
+      setActiveShift(determineCurrentShift());
+      
+      // Set up interval to check shift changes
+      const shiftCheckInterval = setInterval(() => {
+        const currentShift = determineCurrentShift();
+        if (currentShift !== activeShift) {
+          setActiveShift(currentShift);
+        }
+      }, 60000); // Check every minute
+      
+      // Clean up interval on unmount
+      return () => clearInterval(shiftCheckInterval);
+    }
+  }, [selectedDate, activeShift, shiftManuallySelected]);
+
+  // Reset to current shift when changing to today's date
+  // For historical dates, default to Morning shift
+  useEffect(() => {
+    if (selectedDate === format(new Date(), 'yyyy-MM-dd')) {
+      if (!shiftManuallySelected) {
+        setActiveShift(determineCurrentShift());
+      }
+    } else {
+      setActiveShift('Morning');
+      // Reset manual selection flag when changing to a historical date
+      setShiftManuallySelected(false);
+    }
+  }, [selectedDate, shiftManuallySelected]);
 
   // Filter production data when section changes
   useEffect(() => {
@@ -97,6 +127,8 @@ const Dashboard = () => {
 
   const handleSetActiveShift = (shift) => {
     setActiveShift(shift);
+    // Set the flag to indicate manual selection
+    setShiftManuallySelected(true);
     // Close sidebar automatically after selection on mobile
     if (mobileView) {
       setSidebarOpen(false);
@@ -105,6 +137,8 @@ const Dashboard = () => {
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
+    // Reset manual selection when date changes
+    setShiftManuallySelected(false);
   };
 
   const isToday = selectedDate === format(new Date(), 'yyyy-MM-dd');
@@ -229,7 +263,7 @@ const Dashboard = () => {
                     <h3 className="text-sm text-slate-400 mb-2">Shift</h3>
                     <ShiftTab activeShift={activeShift} setActiveShift={handleSetActiveShift} />
                     <p className="text-xs text-slate-400 mt-1">
-                    * Active shift is automatically determined based on the current time
+                      * Active shift is automatically determined based on the current time
                     </p>
                   </div>
                   {/* Section Selection */}
@@ -324,13 +358,13 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="p-2 sm:p-4 overflow-x-auto">
-                <DashboardGrid 
-  productionData={filteredProductionData}
-  targetData={targetData}
-  activeShift={activeShift}
-  mobileView={mobileView}
-  hourlyTargets={targetData.hourlyTargets || { Morning: {}, Evening: {} }}
-/>
+                  <DashboardGrid 
+                    productionData={filteredProductionData}
+                    targetData={targetData}
+                    activeShift={activeShift}
+                    mobileView={mobileView}
+                    hourlyTargets={targetData.hourlyTargets || { Morning: {}, Evening: {} }}
+                  />
                 </div>
               </div>
             </motion.div>
