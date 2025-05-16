@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
-import { getWorkcenters } from '../services/api';
-import { setTarget, getTargetsByDate } from '../services/targetService';
+import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowPathIcon, 
+  CheckCircleIcon, 
+  ExclamationCircleIcon,
+  CalendarDaysIcon,
+  UsersIcon,
+  ClockIcon,
+  BoltIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  AdjustmentsHorizontalIcon
+} from '@heroicons/react/24/outline';
 
 const TargetForm = ({ onTargetAdded, selectedDate }) => {
   const initialFormState = {
@@ -24,6 +35,7 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
   const [error, setError] = useState(null);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [currentTargets, setCurrentTargets] = useState(null);
+  const [showTimeSlots, setShowTimeSlots] = useState(true);
   
   // Time slots based on shift
   const morningTimeSlots = ['05:30-06:00', '06:00-07:00', '07:00-08:00', '08:00-09:30', '09:30-10:30', '10:30-11:30', '11:30-12:30', '12:30-13:30'];
@@ -51,12 +63,40 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
     }));
   });
 
+  // Mock function for fetching workcenters
+  const mockGetWorkcenters = () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(['S2CU4', 'S2LU', 'S2MU', 'S2CU1', 'S2CU3']);
+      }, 500);
+    });
+  };
+
+  // Mock function for setting targets
+  const mockSetTarget = (data) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve({ ...data, id: 'mock-id-123' });
+      }, 800);
+    });
+  };
+
+  // Mock function for getting targets by date
+  const mockGetTargetsByDate = () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([]);
+      }, 500);
+    });
+  };
+
   // Fetch workcenters on component mount
   useEffect(() => {
     const fetchWorkcenters = async () => {
       try {
         setLoadingWorkcenters(true);
-        const fetchedWorkcenters = await getWorkcenters();
+        // Replace with mockGetWorkcenters for demo
+        const fetchedWorkcenters = await mockGetWorkcenters();
         
         if (fetchedWorkcenters && fetchedWorkcenters.length > 0) {
           setWorkcenters(fetchedWorkcenters);
@@ -94,15 +134,16 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
 
   // Update form data when selected date changes
   useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      targetDate: selectedDate || format(new Date(), 'yyyy-MM-dd')
-    }));
+    if (selectedDate) {
+      setFormData(prev => ({
+        ...prev,
+        targetDate: selectedDate
+      }));
+    }
   }, [selectedDate]);
 
   // Update hourly targets when shift changes
   useEffect(() => {
-    const slots = getTimeSlots();
     calculateHourlyTargets(formData.planQty, formData.hours);
   }, [formData.shift]);
 
@@ -116,7 +157,8 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
   // Fetch existing targets for the selected workcenter and date
   const fetchExistingTargets = async () => {
     try {
-      const targets = await getTargetsByDate(formData.targetDate);
+      // Replace with mockGetTargetsByDate for demo
+      const targets = await mockGetTargetsByDate(formData.targetDate);
       if (targets && targets.length > 0) {
         const target = targets.find(t => 
           t.workcenter === formData.workcenter && 
@@ -234,11 +276,12 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
       // Prepare data for API
       const apiFormData = {
         ...formData,
-        targetDate: new Date(formData.targetDate).toISOString(),
+        targetDate: formData.targetDate,
         timeSlotTargets: advancedMode ? hourlyTargets : null
       };
       
-      const result = await setTarget(apiFormData);
+      // Replace with mockSetTarget for demo
+      const result = await mockSetTarget(apiFormData);
       setSuccess(true);
       setLoading(false);
       
@@ -258,188 +301,296 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">
-        {currentTargets ? 'Update Production Target' : 'Set New Production Target'}
-      </h2>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <AnimatePresence>
+        {error && (
+          <motion.div 
+            className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md mb-3 flex items-center text-sm"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <ExclamationCircleIcon className="h-4 w-4 mr-1.5 text-red-500 flex-shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          Target {currentTargets ? 'updated' : 'set'} successfully!
-        </div>
-      )}
+      <AnimatePresence>
+        {success && (
+          <motion.div 
+            className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-md mb-3 flex items-center text-sm"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <CheckCircleIcon className="h-4 w-4 mr-1.5 text-green-500 flex-shrink-0" />
+            <span>Target {currentTargets ? 'updated' : 'set'} successfully!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Date
-            </label>
-            <input
-              type="date"
-              name="targetDate"
-              value={formData.targetDate}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Workcenter
-            </label>
-            <select
-              name="workcenter"
-              value={formData.workcenter}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-              disabled={loadingWorkcenters}
-            >
-              {loadingWorkcenters ? (
-                <option value="">Loading workcenters...</option>
-              ) : workcenters.length === 0 ? (
-                <option value="">No workcenters available</option>
-              ) : (
-                workcenters.map(wc => (
-                  <option key={wc} value={wc}>{wc}</option>
-                ))
-              )}
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Shift
-            </label>
-            <select
-              name="shift"
-              value={formData.shift}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            >
-              <option value="Morning">Morning</option>
-              <option value="Evening">Evening</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Total Plan Quantity
-            </label>
-            <input
-              type="number"
-              name="planQty"
-              value={formData.planQty}
-              onChange={handleChange}
-              min="1"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Hours
-            </label>
-            <input
-              type="number"
-              name="hours"
-              value={formData.hours}
-              onChange={handleChange}
-              min="1"
-              max="24"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Team Member Count
-            </label>
-            <input
-              type="number"
-              name="teamMemberCount"
-              value={formData.teamMemberCount}
-              onChange={handleChange}
-              min="1"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Standard Minute Value (SMV)
-            </label>
-            <input
-              type="number"
-              name="smv"
-              value={formData.smv}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-        </div>
-        
-        <div className="mt-4 border-t pt-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-md font-semibold">Hourly Targets</h3>
-            <div className="flex items-center">
-              <span className="text-sm mr-2">Enable Advanced Mode</span>
-              <label className="switch">
-                <input 
-                  type="checkbox" 
-                  checked={advancedMode}
-                  onChange={() => setAdvancedMode(!advancedMode)}
-                />
-                <span className="slider rounded"></span>
+        <div className="md:grid md:grid-cols-2 md:gap-6">
+          {/* Left Column - Basic Target Settings */}
+          <div className="space-y-4">
+            {/* Shift Selection */}
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                Shift
               </label>
+              <div className="flex">
+                <label 
+                  className={`flex-1 flex items-center justify-center cursor-pointer py-2 rounded-l-md border transition-all ${
+                    formData.shift === 'Morning' 
+                      ? 'bg-gray-800 border-gray-800 text-white font-medium' 
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="shift"
+                    value="Morning"
+                    checked={formData.shift === 'Morning'}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">Morning</span>
+                </label>
+                
+                <label 
+                  className={`flex-1 flex items-center justify-center cursor-pointer py-2 rounded-r-md border transition-all ${
+                    formData.shift === 'Evening' 
+                      ? 'bg-gray-800 border-gray-800 text-white font-medium' 
+                      : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="shift"
+                    value="Evening"
+                    checked={formData.shift === 'Evening'}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">Evening</span>
+                </label>
+              </div>
+            </div>
+            
+            {/* Workcenter & Date */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                  Workcenter
+                </label>
+                <div className="relative">
+                  <select
+                    name="workcenter"
+                    value={formData.workcenter}
+                    onChange={handleChange}
+                    className="appearance-none shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all bg-white"
+                    required
+                    disabled={loadingWorkcenters}
+                  >
+                    {loadingWorkcenters ? (
+                      <option value="">Loading...</option>
+                    ) : workcenters.length === 0 ? (
+                      <option value="">No workcenters</option>
+                    ) : (
+                      workcenters.map(wc => (
+                        <option key={wc} value={wc}>{wc}</option>
+                      ))
+                    )}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                    <ChevronDownIcon className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1.5 flex items-center">
+                  <CalendarDaysIcon className="h-4 w-4 mr-1 text-gray-400" />
+                  Date
+                </label>
+                <input
+                  type="date"
+                  name="targetDate"
+                  value={formData.targetDate}
+                  onChange={handleChange}
+                  className="shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+            
+            {/* Basic info - Plan Qty, Hours, Team Members */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                  Plan Quantity
+                </label>
+                <input
+                  type="number"
+                  name="planQty"
+                  value={formData.planQty}
+                  onChange={handleChange}
+                  min="1"
+                  className="shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1.5 flex items-center">
+                  <ClockIcon className="h-4 w-4 mr-1 text-gray-400" />
+                  Hours
+                </label>
+                <input
+                  type="number"
+                  name="hours"
+                  value={formData.hours}
+                  onChange={handleChange}
+                  min="1"
+                  max="24"
+                  className="shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1.5 flex items-center">
+                  <UsersIcon className="h-4 w-4 mr-1 text-gray-400" />
+                  Team Size
+                </label>
+                <input
+                  type="number"
+                  name="teamMemberCount"
+                  value={formData.teamMemberCount}
+                  onChange={handleChange}
+                  min="1"
+                  className="shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+            
+            {/* SMV Input */}
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-1.5">
+                SMV (Standard Minute Value)
+              </label>
+              <input
+                type="number"
+                name="smv"
+                value={formData.smv}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                className="shadow-sm border border-gray-200 rounded-md w-full py-2 px-3 text-gray-700 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
+              />
+              <p className="mt-1 text-xs text-gray-500">Minutes required per unit</p>
             </div>
           </div>
-          
-          <div className="bg-gray-50 p-3 rounded-md">
-            {advancedMode ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {hourlyTargets.map((target, index) => (
-                  <div key={target.timeSlot} className="flex items-center">
-                    <span className="w-28 text-sm font-medium">{target.timeSlot}</span>
-                    <input
-                      type="number"
-                      value={target.targetQty}
-                      onChange={(e) => handleHourlyTargetChange(index, e.target.value)}
-                      min="0"
-                      className="ml-2 shadow appearance-none border rounded w-full py-1 px-2 text-gray-700 text-sm"
-                    />
-                  </div>
-                ))}
+
+          {/* Right Column - Hourly Targets */}
+          <div className="mt-6 md:mt-0">
+            <div className="mb-3 flex items-center justify-between">
+              <label className="block text-gray-700 text-sm font-medium">
+                Hourly Targets
+              </label>
+              <div className="flex items-center">
+                <span className="text-xs mr-2 text-gray-500">
+                  {showTimeSlots ? 'Hide' : 'Show'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowTimeSlots(!showTimeSlots)}
+                  className="p-1 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                >
+                  {showTimeSlots ? (
+                    <ChevronUpIcon className="h-4 w-4" />
+                  ) : (
+                    <ChevronDownIcon className="h-4 w-4" />
+                  )}
+                </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {hourlyTargets.map((target) => (
-                  <div key={target.timeSlot} className="flex items-center justify-between text-sm bg-white p-2 rounded border">
-                    <span className="font-medium">{target.timeSlot}</span>
-                    <span className="font-mono">{target.targetQty}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="text-xs text-gray-500 mt-2">
-              {advancedMode 
-                ? "Set custom targets for each time slot. These will override the auto-calculated values."
-                : "Hourly targets are automatically calculated based on the total plan quantity and duration of each time slot."}
             </div>
+            
+            <AnimatePresence>
+              {showTimeSlots && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-xs font-medium text-gray-600">
+                        Time Slots ({formData.shift} Shift)
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-xs mr-2 text-gray-500">
+                          Manual Edit
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={advancedMode}
+                            onChange={() => setAdvancedMode(!advancedMode)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-gray-700"></div>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    {advancedMode ? (
+                      <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto">
+                        {hourlyTargets.map((target, index) => (
+                          <div key={target.timeSlot} className="flex items-center">
+                            <span className="w-20 text-xs font-medium text-gray-600">
+                              {target.timeSlot}
+                            </span>
+                            <input
+                              type="number"
+                              value={target.targetQty}
+                              onChange={(e) => handleHourlyTargetChange(index, e.target.value)}
+                              min="0"
+                              className="shadow-sm border border-gray-200 rounded-md w-full py-1 px-2 text-gray-700 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-transparent transition-all"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2 mt-2 max-h-64 overflow-y-auto">
+                        {hourlyTargets.map((target) => (
+                          <div key={target.timeSlot} className="flex items-center justify-between bg-white p-2 rounded-md border border-gray-200 shadow-sm">
+                            <div className="text-xs text-gray-500">{target.timeSlot}</div>
+                            <div className="text-sm font-medium text-gray-800">{target.targetQty}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="text-xs text-gray-500 mt-3 flex items-center">
+                      <AdjustmentsHorizontalIcon className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                      <span>
+                        {advancedMode 
+                          ? "Customize targets for each time slot"
+                          : "Auto-calculated based on plan quantity and hours"}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
         
@@ -447,67 +598,24 @@ const TargetForm = ({ onTargetAdded, selectedDate }) => {
           <button
             type="submit"
             disabled={loading || loadingWorkcenters}
-            className={`w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+            className={`w-full flex items-center justify-center bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-offset-2 transition-colors ${
               (loading || loadingWorkcenters) ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {loading 
-              ? 'Saving...' 
-              : loadingWorkcenters 
-                ? 'Loading Workcenters...' 
-                : currentTargets 
-                  ? 'Update Target' 
-                  : 'Set Target'}
+            {loading && <ArrowPathIcon className="animate-spin h-4 w-4 mr-2 flex-shrink-0" />}
+            <span>
+              {loading 
+                ? 'Saving...' 
+                : loadingWorkcenters 
+                  ? 'Loading...' 
+                  : currentTargets 
+                    ? 'Update Target' 
+                    : 'Set Target'}
+            </span>
           </button>
         </div>
       </form>
-      
-      <style jsx>{`
-        .switch {
-          position: relative;
-          display: inline-block;
-          width: 40px;
-          height: 20px;
-        }
-        .switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-        .slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #ccc;
-          transition: .4s;
-        }
-        .slider:before {
-          position: absolute;
-          content: "";
-          height: 16px;
-          width: 16px;
-          left: 2px;
-          bottom: 2px;
-          background-color: white;
-          transition: .4s;
-        }
-        input:checked + .slider {
-          background-color: #2196F3;
-        }
-        input:checked + .slider:before {
-          transform: translateX(20px);
-        }
-        .slider.rounded {
-          border-radius: 20px;
-        }
-        .slider.rounded:before {
-          border-radius: 50%;
-        }
-      `}</style>
-    </div>
+    </motion.div>
   );
 };
 
